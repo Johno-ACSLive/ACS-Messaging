@@ -20,6 +20,34 @@ The final change made in 2016 was from VB.NET to C#. Since that time I have not 
 
 TODO: Add documentation on library usage.
 
+Very rough info to get you started, the library has intellisense support and should provide a lot of details + the library is very simple to use. I have provided some sample code below to initialise the library. I'll add proper doco's with full examples once I get time.
+
+Server Init:
+
+// Init MessageServer Object
+MessageServer MS = new MessageServer(<TCP/IP Port>, <Enable or Disable encryption>, <Certificate if encryption is enabled>);
+
+// Attach event handlers to functions
+MS.ConnectionAccepted += MS_ConnectionAccepted;
+MS.ConnectionClosed += MS_ConnectionClosed;
+MS.MessageReceived += MS_MessageReceived;
+MS.Log += MS_Log;
+
+
+Client Init:
+
+// Init MessageClient Object
+MessageClient MC = new MessageClient(<Remote Host (Server) FQDN or IP>, <Remote Host (Server) TCP/IP Port>, <Enable or Disable encryption>);
+
+Attach event handlers to functions
+MC.ConnectionAccepted += MC_ConnectionAccepted;
+MC.ConnectionClosed += MC_ConnectionClosed;
+MC.ConnectionFailed += MC_ConnectionFailed;
+MC.MessageReceived += MC_MessageReceived;
+
+// Connect to Remote Host (Server)
+MC.Connect();
+
 
 ## Contribute
 
