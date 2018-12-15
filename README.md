@@ -13,7 +13,7 @@ The first update was to support binary data for use in all kinds of applications
 
 Finally, I added support for encryption a couple of years ago (TLS1.2 is forced if secure communications are enabled). In order support migration to .NET Core / Standard, C# was needed due to VB.NET always lagging behind in terms of support from new/updated frameworks etc.
 
-The final change made in 2016 was from VB.NET to C#. Since that time I have not made any further changes to the library as it works very well and is quite performant.
+The final change made in 2016 was from VB.NET to C#. Since that time I have not made any further changes to the library as it works very well and is quite performant. There were probably other bug fixes and small improvements here and there that I have forgotten to mention.
 
 
 ## Getting Started
