@@ -25,7 +25,7 @@ Very rough info to get you started, the library has intellisense support and sho
 Server Init:
 
 // Init MessageServer Object
-MessageServer MS = new MessageServer(<TCP/IP Port>, <Enable or Disable encryption>, <Certificate if encryption is enabled>);
+MessageServer MS = new MessageServer(int Port, bool IsSecure, X509Certificate Certificate);
 
 // Attach event handlers to functions
 MS.ConnectionAccepted += MS_ConnectionAccepted;
@@ -37,7 +37,7 @@ MS.Log += MS_Log;
 Client Init:
 
 // Init MessageClient Object
-MessageClient MC = new MessageClient(<Remote Host (Server) FQDN or IP>, <Remote Host (Server) TCP/IP Port>, <Enable or Disable encryption>);
+MessageClient MC = new MessageClient(string Server, int Port, bool IsSecure);
 
 Attach event handlers to functions
 MC.ConnectionAccepted += MC_ConnectionAccepted;
