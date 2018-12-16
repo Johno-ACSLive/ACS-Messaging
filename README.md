@@ -23,7 +23,7 @@ TODO: Add documentation on library usage.
 Very rough info to get you started, the library has intellisense support and should provide a lot of details + the library is very simple to use. I have provided some sample code below to initialise the library. I'll add proper doco's with full examples once I get time.
 
 Server Init:
-
+```
 // Init MessageServer Object
 MessageServer MS = new MessageServer(int Port, bool IsSecure, X509Certificate Certificate);
 
@@ -32,14 +32,14 @@ MS.ConnectionAccepted += MS_ConnectionAccepted;
 MS.ConnectionClosed += MS_ConnectionClosed;
 MS.MessageReceived += MS_MessageReceived;
 MS.Log += MS_Log;
-
+```
 
 Client Init:
-
+```
 // Init MessageClient Object
 MessageClient MC = new MessageClient(string Server, int Port, bool IsSecure);
 
-Attach event handlers to functions
+//Attach event handlers to functions
 MC.ConnectionAccepted += MC_ConnectionAccepted;
 MC.ConnectionClosed += MC_ConnectionClosed;
 MC.ConnectionFailed += MC_ConnectionFailed;
@@ -47,6 +47,7 @@ MC.MessageReceived += MC_MessageReceived;
 
 // Connect to Remote Host (Server)
 MC.Connect();
+```
 
 
 ## Contribute
