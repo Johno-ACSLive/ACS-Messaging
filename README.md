@@ -23,7 +23,7 @@ TODO: Add documentation on library usage.
 Very rough info to get you started, the library has intellisense support and should provide a lot of details + the library is very simple to use. I have provided some sample code below to initialise the library. I'll add proper doco's with full examples once I get time.
 
 Server Init:
-```
+```c#
 // Init MessageServer Object
 MessageServer MS = new MessageServer(int Port, bool IsSecure, X509Certificate Certificate);
 
@@ -35,7 +35,7 @@ MS.Log += MS_Log;
 ```
 
 Client Init:
-```
+```C#
 // Init MessageClient Object
 MessageClient MC = new MessageClient(string Server, int Port, bool IsSecure);
 
