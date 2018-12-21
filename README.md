@@ -1,6 +1,6 @@
 # ACS Messaging
 
-[![Build Status](https://dev.azure.com/acslive/ACS-Messaging/_apis/build/status/Johno-ACSLIVE.ACS-Messaging?branchName=master)](https://github.com/Johno-ACSLive/ACS-Messaging/blob/master/README.md#) [![License](https://img.shields.io/github/license/Johno-ACSLive/ACS-Messaging.svg)](https://github.com/Johno-ACSLive/ACS-Messaging/blob/master/README.md#license)
+[![Build Status](https://dev.azure.com/acslive/ACS-Messaging/_apis/build/status/Johno-ACSLIVE.ACS-Messaging?branchName=master)](https://github.com/Johno-ACSLive/ACS-Messaging/blob/master/README.md) [![License](https://img.shields.io/github/license/Johno-ACSLive/ACS-Messaging.svg)](https://github.com/Johno-ACSLive/ACS-Messaging/blob/master/README.md#license)
 
 The Advanced Computing Services Messaging library allows Client/Server Communications. Each instance can either be a Server or a Client and supports TLS1.2 encryption.
 
