@@ -5,7 +5,7 @@ If you'd like to contribute, that would be fantastic as we could definitely use 
 
 ## Code of conduct
 
-Any contribution or participation on this project is expected to follow the [Code of Conduct](CONDUCT.md).
+Any contribution or participation on this project is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 
 ## Getting Started
