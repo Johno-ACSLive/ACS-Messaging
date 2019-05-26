@@ -15,6 +15,8 @@ Finally, I added support for encryption a couple of years ago (TLS1.2 is forced 
 
 The final change made in 2016 was from VB.NET to C#. Since that time I have not made any further changes to the library as it works very well and is quite performant. There were probably other bug fixes and small improvements here and there that I have forgotten to mention.
 
+Update (2019-05-26): Project has been converted to .NET Standard version 2.
+
 
 ## Getting Started
 
