@@ -441,7 +441,6 @@ namespace ACS.Messaging
         /// </summary>
         private async void AcceptTcpClient()
         {
-            HostInfo host = null;
             TcpClient client = default(TcpClient);
             SslStream securestream = default(SslStream);
             NetworkStream stream = default(NetworkStream);
