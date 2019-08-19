@@ -392,6 +392,23 @@ namespace ACS.Messaging
                 OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.ToString()));
             }
         }
+
+        /// <summary>
+        /// Updates certifcate used when accepting new connections.
+        /// If secure is disabled this function has no effect.
+        /// </summary>
+        /// <param name="Certificate">
+        /// The new certificate to use by the host.
+        /// </param>
+        public void UpdateCertificate(X509Certificate Certificate)
+        {
+            // Only update if secure connections enabled
+            if (_secure)
+            {
+                // Assign certificate for secure connections
+                servercertificate = Certificate;
+            }
+        }
         #endregion
 
         #region " Protected Methods "
