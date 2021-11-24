@@ -459,64 +459,13 @@ namespace ACS.Messaging
         private async void AcceptTcpClient()
         {
             TcpClient client = default(TcpClient);
-            SslStream securestream = default(SslStream);
-            NetworkStream stream = default(NetworkStream);
+            
             do
             {
                 try
                 {
                     client = await server.AcceptTcpClientAsync().ConfigureAwait(false);
-                    try
-                    {
-                        // Configure the client to not delay send and receives.
-                        client.NoDelay = true;
-                        // Get the client stream.
-                        stream = client.GetStream();
-                        // Create a secure stream.
-                        securestream = null;
-                        // Create the buffer.
-                        byte[] buffer = new byte[BufferSize];
-
-                        // Determine if a secure connection was requested.
-                        if (Secure == false)
-                        {
-                            // Remember the client and its host information.
-                            AddClient(client);
-                            // Listen asynchronously for incoming messages from this client.
-                            Read(buffer, client, stream);
-                        }
-                        else if (Secure == true)
-                        {
-                            // Create a secure stream and authenticate the server certificate.
-                            securestream = new SslStream(client.GetStream(), false);
-                            securestream.AuthenticateAsServer(servercertificate, false, SslProtocols.Tls12, true);
-                            // Remember the client and its host information.
-                            AddClient(client, securestream);
-                            // Listen asynchronously for incoming messages from this client.
-                            SecureRead(buffer, client, securestream);
-                        }
-                    }
-                    catch (IOException Ex)
-                    {
-                        // If the connecton drops out or something, close the connection.
-                        OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.ToString()));
-                        client.GetStream().Close();
-                        client.Close();
-                    }
-                    catch (AuthenticationException Ex)
-                    {
-                        // If the connection doesn't have an SSL stream or wrong SSL Protocol etc., close the connection.
-                        OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.ToString()));
-                        client.GetStream().Close();
-                        client.Close();
-                    }
-                    catch (Exception Ex)
-                    {
-                        // Don't know what the hell happened, lets close the connection and log the exception.
-                        client.GetStream().Close();
-                        client.Close();
-                        OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.ToString()));
-                    }
+                    _ = Task.Run(() => ProcessClient(client)).ConfigureAwait(false);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -529,6 +478,72 @@ namespace ACS.Messaging
                     OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.ToString()));
                 }
             } while (true);
+        }
+
+        /// <summary>
+        /// Accepts incoming connection requests asynchronously.
+        /// </summary>
+        private void ProcessClient(TcpClient client)
+        {
+            SslStream securestream = default(SslStream);
+            NetworkStream stream = default(NetworkStream);
+
+            try
+            {
+                // Configure the client to not delay send and receives.
+                client.NoDelay = true;
+                // Get the client stream.
+                stream = client.GetStream();
+                // Create a secure stream.
+                securestream = null;
+                // Create the buffer.
+                byte[] buffer = new byte[BufferSize];
+
+                // Determine if a secure connection was requested.
+                if (Secure == false)
+                {
+                    // Remember the client and its host information.
+                    AddClient(client);
+                    // Listen asynchronously for incoming messages from this client.
+                    Read(buffer, client, stream);
+                }
+                else if (Secure == true)
+                {
+                    // Create a secure stream and authenticate the server certificate.
+                    securestream = new SslStream(client.GetStream(), false);
+                    securestream.AuthenticateAsServer(servercertificate, false, SslProtocols.Tls12, true);
+                    // Remember the client and its host information.
+                    AddClient(client, securestream);
+                    // Listen asynchronously for incoming messages from this client.
+                    SecureRead(buffer, client, securestream);
+                }
+            }
+            catch (IOException)
+            {
+                // If the connecton drops out or something, close the connection.
+                client.GetStream().Close();
+                client.Close();
+            }
+            catch (AuthenticationException)
+            {
+                // If the connection doesn't have an SSL stream or wrong SSL Protocol etc., close the connection.
+                securestream.Close();
+                client.Close();
+            }
+            catch (Exception Ex)
+            {
+                // Don't know what the hell happened, lets close the connection and log the exception.
+                OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.ToString()));
+                if (Secure == true)
+                {
+                    securestream.Close();
+                }
+                else if (Secure == false)
+                {
+                    client.GetStream().Close();
+                }  
+                client.Close();
+            }
         }
 
         /// <summary>
