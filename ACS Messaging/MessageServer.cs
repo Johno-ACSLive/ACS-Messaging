@@ -644,16 +644,6 @@ namespace ACS.Messaging
                     Message.Clear();
                     // Asynchronously read the data.
                     byteCount = await stream.ReadAsync(buffer, 0, buffer.Count()).ConfigureAwait(false);
-
-                    // Check to see if the client has disconnected.
-                    if (byteCount == 0)
-                    {
-                        // If there is no data when an asynchronous read completes it is because the client closed the connection.
-                        RemoveClient(client);
-                        // Client is not there any more, so lets exit the loop.
-                        break;
-                    }
-
                     Message.AddRange(buffer.Take(byteCount));
                     // Notify any listeners that a message was received.
                     OnMessageReceived(new MessageReceivedEventArgs(clients[client], Message.ToArray()));
@@ -673,6 +663,15 @@ namespace ACS.Messaging
                     OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.ToString()));
                 }
 
+                // Check to see if the client has disconnected.
+                
+                if (byteCount == 0)
+                {
+                    // If there is no data when an asynchronous read completes it is because the client closed the connection.
+                    RemoveClient(client);
+                    // Client is not there any more, so lets exit the loop.
+                    break;
+                }
             } while (true);
         }
 
@@ -702,16 +701,6 @@ namespace ACS.Messaging
                     Message.Clear();
                     // Asynchronously read the data.
                     byteCount = await securestream.ReadAsync(buffer, 0, buffer.Count()).ConfigureAwait(false);
-
-                    // Check to see if the client has disconnected.
-                    if (byteCount == 0)
-                    {
-                        // If there is no data when an asynchronous read completes it is because the client closed the connection.
-                        RemoveClient(client);
-                        // Client is not there any more, so lets exit the loop.
-                        break;
-                    }
-
                     Message.AddRange(buffer.Take(byteCount));
                     // Notify any listeners that a message was received.
                     OnMessageReceived(new MessageReceivedEventArgs(clients[client], Message.ToArray()));
@@ -729,6 +718,15 @@ namespace ACS.Messaging
                 {
                     // Don't know what the hell happened, lets log the exception.
                     OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.ToString()));
+                }
+
+                // Check to see if the client has disconnected.
+                if (byteCount == 0)
+                {
+                    // If there is no data when an asynchronous read completes it is because the client closed the connection.
+                    RemoveClient(client);
+                    // Client is not there any more, so lets exit the loop.
+                    break;
                 }
             } while (true);
         }
