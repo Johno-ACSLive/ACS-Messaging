@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28922.388
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACS Messaging", "ACS Messaging\ACS Messaging.csproj", "{6EE2482B-5AC8-484C-9BD9-8940E39CB25E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ACS Messaging", "ACS Messaging\ACS Messaging.csproj", "{6EE2482B-5AC8-484C-9BD9-8940E39CB25E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample Client", "Sample Client\Sample Client.csproj", "{F6590ED2-0474-4D59-A114-F1AD5B94553E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample Server", "Sample Server\Sample Server.csproj", "{7416DB52-20C0-4222-B0EB-B2874A116A37}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{6EE2482B-5AC8-484C-9BD9-8940E39CB25E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6EE2482B-5AC8-484C-9BD9-8940E39CB25E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6EE2482B-5AC8-484C-9BD9-8940E39CB25E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6590ED2-0474-4D59-A114-F1AD5B94553E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6590ED2-0474-4D59-A114-F1AD5B94553E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6590ED2-0474-4D59-A114-F1AD5B94553E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6590ED2-0474-4D59-A114-F1AD5B94553E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7416DB52-20C0-4222-B0EB-B2874A116A37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7416DB52-20C0-4222-B0EB-B2874A116A37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7416DB52-20C0-4222-B0EB-B2874A116A37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7416DB52-20C0-4222-B0EB-B2874A116A37}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

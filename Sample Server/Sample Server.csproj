@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>Sample_Server</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Sample Server using the ACS Messaging Library</Description>
+    <Authors>Advanced Computing Services</Authors>
+    <Copyright>Copyright © 2008-2022</Copyright>
+    <Product>ACS Messaging</Product>
+    <Version>2.0.3</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ACS Messaging\ACS Messaging.csproj" />
+  </ItemGroup>
+
+</Project>
