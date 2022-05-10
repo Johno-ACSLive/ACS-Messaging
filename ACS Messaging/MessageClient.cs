@@ -55,10 +55,7 @@ namespace ACS.Messaging
         /// <value>
         /// An <b>int</b> containing a port number.
         /// </value>
-        public int LocalPort
-        {
-            get { return _localPort; }
-        }
+        public int LocalPort => _localPort;
         #endregion
 
         #region " Constructors "
@@ -101,10 +98,6 @@ namespace ACS.Messaging
         #endregion
 
         #region " Events "
-        /// <summary>
-        /// Occurs when a connection attempt fails.
-        /// </summary>
-        public event ConnectionEventHandler ConnectionFailed;
         #endregion
 
         #region " Methods "
@@ -161,20 +154,6 @@ namespace ACS.Messaging
 
             base.Dispose(disposing);
             isDisposed = true;
-        }
-
-        /// <summary>
-        /// Raises the <see cref="ConnectionFailed" /> event.
-        /// </summary>
-        /// <param name="e">
-        /// Contains the data for the event.
-        /// </param>
-        /// <remarks>
-        /// The event will be raised on the thread on which the current instance was created.
-        /// </remarks>
-        protected virtual void OnConnectionFailed(ConnectionEventArgs e)
-        {
-            RaiseConnectionFailed(e);
         }
         #endregion
 
@@ -266,17 +245,6 @@ namespace ACS.Messaging
         private void Initialise(string hostName, int remotePort, bool secure)
         {
             server = new HostInfo(hostName, remotePort, secure);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="ConnectionFailed" /> event on the current thread.
-        /// </summary>
-        /// <param name="e">
-        /// Contains the data for the event.
-        /// </param>
-        private void RaiseConnectionFailed(object e)
-        {
-            ConnectionFailed?.Invoke(this, (ConnectionEventArgs)e);
         }
 
         /// <summary>
@@ -420,8 +388,6 @@ namespace ACS.Messaging
             }
             catch (Exception Ex)
             {
-
-                // Do nothing
                 OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.ToString()));
             }
             server.WriteLock.Release();

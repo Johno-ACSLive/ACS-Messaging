@@ -16,6 +16,11 @@ public abstract class MessageClientServerBase : IDisposable
     /// Indicates whether or not the current instance has been disposed.
     /// </summary>
     private bool isDisposed = false;
+
+    /// <summary>
+    /// Indicates the current connection status.
+    /// </summary>
+    private bool isconnected = false;
     #endregion
 
     #region " Properties "
@@ -25,10 +30,15 @@ public abstract class MessageClientServerBase : IDisposable
     /// <value>
     /// An <b>int</b> containing the read block size. The default is 1024 (1 KB).
     /// </value>
-    protected int BufferSize
-    {
-        get { return _bufferSize; }
-    }
+    protected int BufferSize => _bufferSize;
+
+    /// <summary>
+    /// Gets the current connection status.
+    /// </summary>
+    /// <value>
+    /// A <b>bool</b> indicating connection status.
+    /// </value>
+    public bool IsConnected => isconnected;
     #endregion
 
     #region " Constructors "
@@ -61,6 +71,11 @@ public abstract class MessageClientServerBase : IDisposable
     /// Occurs when a connection is closed.
     /// </summary>
     public event ConnectionEventHandler ConnectionClosed;
+
+    /// <summary>
+    /// Occurs when a connection attempt fails.
+    /// </summary>
+    public event ConnectionEventHandler ConnectionFailed;
 
     /// <summary>
     /// Occurs when a message is received.
@@ -106,6 +121,7 @@ public abstract class MessageClientServerBase : IDisposable
             }
         }
         isDisposed = true;
+        isconnected = false;
     }
 
     /// <summary>
@@ -119,6 +135,7 @@ public abstract class MessageClientServerBase : IDisposable
     /// </remarks>
     protected virtual void OnConnectionAccepted(ConnectionEventArgs e)
     {
+        isconnected = true;
         RaiseConnectionAccepted(e);
     }
 
@@ -133,7 +150,23 @@ public abstract class MessageClientServerBase : IDisposable
     /// </remarks>
     protected virtual void OnConnectionClosed(ConnectionEventArgs e)
     {
+        isconnected = false;
         RaiseConnectionClosed(e);
+    }
+
+    /// <summary>
+    /// Raises the <see cref="ConnectionFailed" /> event.
+    /// </summary>
+    /// <param name="e">
+    /// Contains the data for the event.
+    /// </param>
+    /// <remarks>
+    /// The event will be raised on the thread on which the current instance was created.
+    /// </remarks>
+    protected virtual void OnConnectionFailed(ConnectionEventArgs e)
+    {
+        isconnected = false;
+        RaiseConnectionFailed(e);
     }
 
     /// <summary>
@@ -192,6 +225,17 @@ public abstract class MessageClientServerBase : IDisposable
         {
             ConnectionClosed(this, (ConnectionEventArgs)e);
         }
+    }
+
+    /// <summary>
+    /// Raises the <see cref="ConnectionFailed" /> event on the current thread.
+    /// </summary>
+    /// <param name="e">
+    /// Contains the data for the event.
+    /// </param>
+    private void RaiseConnectionFailed(object e)
+    {
+        ConnectionFailed?.Invoke(this, (ConnectionEventArgs)e);
     }
 
     /// <summary>
