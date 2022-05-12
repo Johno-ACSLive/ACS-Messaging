@@ -7,22 +7,20 @@ The Advanced Computing Services Messaging library allows Client/Server Communica
 
 ## History
 
-8 years ago I found a library written by [jmcilhinney](http://www.vbforums.com/member.php?58941-jmcilhinney) who released a project [here](http://www.vbforums.com/showthread.php?587341-VB2008-NET-3-5-Asynchronous-TcpListener-amp-TcpClient). It was a great library to learn async networking in VB.NET. My immediate need was binary data, not text.
+In 2010 I found a library written by [jmcilhinney](http://www.vbforums.com/member.php?58941-jmcilhinney) who released a project [here](http://www.vbforums.com/showthread.php?587341-VB2008-NET-3-5-Asynchronous-TcpListener-amp-TcpClient). It was a great library to learn async networking in VB.NET. My immediate need was binary data, not text.
 
-The first update was to support binary data for use in all kinds of applications. After that change, a .NET framework version upgrade meant I could update the async methods from using callback methods to using the async/await keywords.
-
-Finally, I added support for encryption a couple of years ago (TLS1.2 is forced if secure communications are enabled). In order support migration to .NET Core / Standard, C# was needed due to VB.NET always lagging behind in terms of support from new/updated frameworks etc.
-
-The final change made in 2016 was from VB.NET to C#. Since that time I have not made any further changes to the library as it works very well and is quite performant. There were probably other bug fixes and small improvements here and there that I have forgotten to mention.
-
-Update (2019-05-26): Project has been converted to .NET Standard version 2.
+Various updates were made, such as:
+* Support binary data for use in all kinds of applications.
+* Bump in .NET framework version meant I could switch from using callback methods to the async/await keywords.
+* Added support for encryption (TLS1.2 is forced if secure communications are enabled).
+* Migration from VB.NET to C# (to migrate to .NET Core / Standard, C# was needed as VB.NET consistently lagged behind in terms of support in new version of .NET etc.).
 
 
 ## Getting Started
 
 TODO: Add documentation on library usage.
 
-Very rough info to get you started, the library has intellisense support and should provide a lot of details + the library is very simple to use. I have provided some sample code below to initialise the library. I'll add proper doco's with full examples once I get time.
+Very rough info to get you started, the library has intellisense support and should provide a lot of details as well as the library being very simple to use. Basic sample code below as well as sample server and client projects.
 
 Server Init:
 ```c#
