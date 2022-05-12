@@ -20,7 +20,7 @@ Various updates were made, such as:
 
 TODO: Add documentation on library usage.
 
-Basic sample code below as well as a sample server and client project to get you starded. The library has intellisense support and should provide a lot of details but is very simple to use.
+Basic sample code below as well as a sample server and client project to get you started. The library has intellisense support and should provide a lot of details but is very simple to use.
 
 Server Init:
 ```c#
