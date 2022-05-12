@@ -18,16 +18,16 @@ For bug fixes or small changes, please create a pull request. For larger changes
 ## Roadmap
 
 That doesn't mean the library is done, still a lot of work to do and I have the following in mind currently:
-- ~~Convert this project over to .NET Standard version 2~~ - Complete!
+- ~~Convert this project over to .NET Standard version 2~~
 - Migrate to .NET 6
 - Add message framing
 - Add chunked transfers
 - Add serialisation support
 - Standardise on naming conventions (varies slightly)
-- ~~Add CI/CD pipelines and build status to README
+- ~~Add CI/CD pipelines and build status to README~~
 - Publish NuGet packages
 - Add documentation
-- ~~Add samples
+- ~~Add samples~~
 
 
 ## License
