@@ -13,7 +13,7 @@ Various updates were made, such as:
 * Support binary data for use in all kinds of applications.
 * Bump in .NET framework version meant I could switch from using callback methods to the async/await keywords.
 * Added support for encryption (TLS1.2 is forced if secure communications are enabled).
-* Migration from VB.NET to C# (to migrate to .NET Core / Standard, C# was needed as VB.NET consistently lagged behind in terms of support in new version of .NET etc.).
+* Migration from VB.NET to C# (to migrate to .NET Core / Standard, C# was needed as VB.NET consistently lagged behind in terms of feature support in new versions of .NET etc.).
 
 
 ## Getting Started
