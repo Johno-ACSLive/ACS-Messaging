@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ACS.Messaging</RootNamespace>
     <AssemblyName>ACS.Messaging</AssemblyName>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Description>Client-Server Library for Unified Communications</Description>
     <Authors>Advanced Computing Services</Authors>
     <Copyright>Copyright © 2008-2022</Copyright>
