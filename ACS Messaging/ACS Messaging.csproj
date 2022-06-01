@@ -16,6 +16,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <IsPackable>True</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
