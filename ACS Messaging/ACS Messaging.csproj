@@ -10,6 +10,19 @@
     <Copyright>Copyright © 2008-2022</Copyright>
     <Product>ACS Messaging</Product>
     <Version>2.0.4</Version>
+    <PackageProjectUrl>https://www.acslive.com.au</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Johno-ACSLive/ACS-Messaging</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\docs\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
