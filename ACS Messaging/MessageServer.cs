@@ -785,7 +785,6 @@ namespace ACS.Messaging
                     {
                         host = clients[client];
                         clients.Remove(client);
-                        client.GetStream().Close();
                         client.Close();
                     }
                     catch (Exception Ex)
