@@ -57,6 +57,8 @@ void MessageReceived(object sender, MessageReceivedEventArgs e)
     // e.Data will provide a byte array. NOTE: this is not the complete message as the library currently doesn't handle message framing.
     // You will need to stitch the message together yourself. This example will generally work with short text messages.
     Console.WriteLine(string.Format("{0} - {1} - {2} - {3} - {4}", DateTime.UtcNow, "Sample Server", "Message Received", e.Host.ToString(), Encoding.UTF8.GetString(e.Data)));
+    // We will now disconnect the client.
+    ms.DisconnectClient(e.Host);
 }
 
 void Log(object sender, LogEventArgs e)

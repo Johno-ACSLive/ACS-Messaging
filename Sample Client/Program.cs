@@ -56,6 +56,7 @@ void ConnectionClosed(object sender, ConnectionEventArgs e)
 {
     Console.WriteLine(string.Format("{0} - {1} - {2} - {3}", DateTime.UtcNow, "Sample Client", "Connection Closed", e.Host.ToString()));
     Console.WriteLine(string.Format("{0} - {1} - {2}: {3}", DateTime.UtcNow, "Sample Client", "Is Connected", mc.IsConnected));
+    exitevent.Set();
 }
 
 void ConnectionFailed(object sender, ConnectionEventArgs e)

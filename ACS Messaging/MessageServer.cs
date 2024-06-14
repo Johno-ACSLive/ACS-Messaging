@@ -394,6 +394,26 @@ namespace ACS.Messaging
         }
 
         /// <summary>
+        /// Disconnects the specified client.
+        /// </summary>
+        /// <param name="host">
+        /// The remote client to disconnect.
+        /// </param>
+        public void DisconnectClient(HostInfo host)
+        {
+            try
+            {
+                TcpClient client = clients.Select(c => new { client = c, host = c.Value }).Where(x => x.host.Equals(host)).Select(x => x.client.Key).First();
+                client.GetStream().Close();
+            }
+            catch (Exception Ex)
+            {
+                // Don't know what the hell happened, lets log the exception.
+                OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.ToString()));
+            }
+        }
+
+        /// <summary>
         /// Updates certifcate used when accepting new connections.
         /// If secure is disabled this function has no effect.
         /// </summary>
