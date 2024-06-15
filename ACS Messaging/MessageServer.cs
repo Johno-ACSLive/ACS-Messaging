@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -34,6 +35,18 @@ namespace ACS.Messaging
         //    /// </summary>
         //    public SslStream SecureStream;
         //}
+
+        /// <summary>
+        /// An enumerable indicating the Access Control mode for the rules in the Access Control List.
+        /// </summary>
+        /// <value>
+        /// An <b>Enumerable</b> containing Access Control modes.
+        /// </value>
+        public enum AccessControlType
+        {
+            Whitelist,
+            Blacklist,
+        }
         #endregion
 
         #region " Fields "
@@ -41,6 +54,11 @@ namespace ACS.Messaging
         /// The connected clients and the corresponding remote host information.
         /// </summary>
         private readonly Dictionary<TcpClient, HostInfo> clients = new Dictionary<TcpClient, HostInfo>();
+
+        /// <summary>
+        /// The Access Control Rules for clients connecting to the server.
+        /// </summary>
+        private readonly Dictionary<IPAddress, AccessControlRule> accesscontrollist = new Dictionary<IPAddress, AccessControlRule>();
 
         /// <summary>
         /// Provides locking object for access to clients.
@@ -114,6 +132,38 @@ namespace ACS.Messaging
         {
             get { return clients.Values.ToArray(); }
         }
+
+        /// <summary>
+        /// Gets a list of the Access Control Rules for clients connecting to the server.
+        /// </summary>
+        /// <value>
+        /// A List of <see cref="AccessControlRule" /> objects containing the Access Control Rule.
+        /// </value>
+        public IEnumerable<AccessControlRule> AccessControlList => accesscontrollist.Values;
+
+        /// <summary>
+        /// Gets or Sets the Access Control Mode.
+        /// </summary>
+        /// <value>
+        /// An <b>AccessControlType</b> indicating which Access Control Mode to use.
+        /// </value>
+        public AccessControlType AccessControlMode { get; set; } = AccessControlType.Whitelist;
+
+        /// <summary>
+        /// Gets or Sets the flag for enabling or disabling Access Control globally.
+        /// </summary>
+        /// <value>
+        /// A <b>Boolean</b> indicating if Access Control is active or not.
+        /// </value>
+        public bool IsAccessControlEnabled { get; set; } = false;
+
+        /// <summary>
+        /// Gets or Sets the flag for enabling or disabling Access Control Rule Challenges globally.
+        /// </summary>
+        /// <value>
+        /// A <b>Boolean</b> indicating if Access Control Challenges are active or not.
+        /// </value>
+        public bool IsAccessControlChallengeEnabled { get; set; } = false;
         #endregion
 
         #region " Constructors "
@@ -126,12 +176,24 @@ namespace ACS.Messaging
         /// <param name="Certificate">
         /// The X509 Certificate required by the secure connection.
         /// </param>
+        /// <param name="EnableAccessControl">
+        /// Enable Access Control globally.
+        /// </param>
+        /// <param name="EnableAccessControlChallenge">
+        /// Enable Access Control Challenge globally.
+        /// </param>
+        /// <param name="AccessControlType">
+        /// Sets the Access Control Mode.
+        /// </param>
+        /// <param name="AccessControlRules">
+        /// Sets the inital rules for the Access Control List.
+        /// </param>
         /// <param name="backlog">
         /// The maximum number of clients that can be queued for TcpListener to accept.
         /// </param>
-        public MessageServer(bool secure, X509Certificate Certificate = null, int backlog = 10)
+        public MessageServer(bool secure, X509Certificate Certificate = null, bool EnableAccessControl = false, bool EnableAccessControlChallenge = false, AccessControlType AccessControlType = AccessControlType.Whitelist, List<AccessControlRule> AccessControlRules = null, int backlog = 10)
         {
-            Initialise(IPAddress.Any, 0, secure, Certificate, backlog);
+            Initialise(IPAddress.Any, 0, secure, Certificate, EnableAccessControl, EnableAccessControlChallenge, AccessControlType, AccessControlRules, backlog);
         }
 
         /// <summary>
@@ -146,12 +208,24 @@ namespace ACS.Messaging
         /// <param name="Certificate">
         /// The X509 Certificate required by the secure connection.
         /// </param>
+        /// <param name="EnableAccessControl">
+        /// Enable Access Control globally.
+        /// </param>
+        /// <param name="EnableAccessControlChallenge">
+        /// Enable Access Control Challenge globally.
+        /// </param>
+        /// <param name="AccessControlType">
+        /// Sets the Access Control Mode.
+        /// </param>
+        /// <param name="AccessControlRules">
+        /// Sets the inital rules for the Access Control List.
+        /// </param>
         /// <param name="backlog">
         /// The maximum number of clients that can be queued for TcpListener to accept.
         /// </param>
-        public MessageServer(string address, bool secure, X509Certificate Certificate = null, int backlog = 10)
+        public MessageServer(string address, bool secure, X509Certificate Certificate = null, bool EnableAccessControl = false, bool EnableAccessControlChallenge = false, AccessControlType AccessControlType = AccessControlType.Whitelist, List<AccessControlRule> AccessControlRules = null, int backlog = 10)
         {
-            Initialise(ParseAddress(address), 0, secure, Certificate, backlog);
+            Initialise(ParseAddress(address), 0, secure, Certificate, EnableAccessControl, EnableAccessControlChallenge, AccessControlType, AccessControlRules, backlog);
         }
 
         /// <summary>
@@ -166,12 +240,24 @@ namespace ACS.Messaging
         /// <param name="Certificate">
         /// The X509 Certificate required by the secure connection.
         /// </param>
+        /// <param name="EnableAccessControl">
+        /// Enable Access Control globally.
+        /// </param>
+        /// <param name="EnableAccessControlChallenge">
+        /// Enable Access Control Challenge globally.
+        /// </param>
+        /// <param name="AccessControlType">
+        /// Sets the Access Control Mode.
+        /// </param>
+        /// <param name="AccessControlRules">
+        /// Sets the inital rules for the Access Control List.
+        /// </param>
         /// <param name="backlog">
         /// The maximum number of clients that can be queued for TcpListener to accept.
         /// </param>
-        public MessageServer(IPAddress address, bool secure, X509Certificate Certificate = null, int backlog = 10)
+        public MessageServer(IPAddress address, bool secure, X509Certificate Certificate = null, bool EnableAccessControl = false, bool EnableAccessControlChallenge = false, AccessControlType AccessControlType = AccessControlType.Whitelist, List<AccessControlRule> AccessControlRules = null, int backlog = 10)
         {
-            Initialise(address, 0, secure, Certificate, backlog);
+            Initialise(address, 0, secure, Certificate, EnableAccessControl, EnableAccessControlChallenge, AccessControlType, AccessControlRules, backlog);
         }
 
         /// <summary>
@@ -186,12 +272,24 @@ namespace ACS.Messaging
         /// <param name="Certificate">
         /// The X509 Certificate required by the secure connection.
         /// </param>
+        /// <param name="EnableAccessControl">
+        /// Enable Access Control globally.
+        /// </param>
+        /// <param name="EnableAccessControlChallenge">
+        /// Enable Access Control Challenge globally.
+        /// </param>
+        /// <param name="AccessControlType">
+        /// Sets the Access Control Mode.
+        /// </param>
+        /// <param name="AccessControlRules">
+        /// Sets the inital rules for the Access Control List.
+        /// </param>
         /// <param name="backlog">
         /// The maximum number of clients that can be queued for TcpListener to accept.
         /// </param>
-        public MessageServer(int port, bool secure, X509Certificate Certificate = null, int backlog = 10)
+        public MessageServer(int port, bool secure, X509Certificate Certificate = null, bool EnableAccessControl = false, bool EnableAccessControlChallenge = false, AccessControlType AccessControlType = AccessControlType.Whitelist, List<AccessControlRule> AccessControlRules = null, int backlog = 10)
         {
-            Initialise(IPAddress.Any, port, secure, Certificate, backlog);
+            Initialise(IPAddress.Any, port, secure, Certificate, EnableAccessControl, EnableAccessControlChallenge, AccessControlType, AccessControlRules, backlog);
         }
 
         /// <summary>
@@ -209,12 +307,24 @@ namespace ACS.Messaging
         /// <param name="Certificate">
         /// The X509 Certificate required by the secure connection.
         /// </param>
+        /// <param name="EnableAccessControl">
+        /// Enable Access Control globally.
+        /// </param>
+        /// <param name="EnableAccessControlChallenge">
+        /// Enable Access Control Challenge globally.
+        /// </param>
+        /// <param name="AccessControlType">
+        /// Sets the Access Control Mode.
+        /// </param>
+        /// <param name="AccessControlRules">
+        /// Sets the inital rules for the Access Control List.
+        /// </param>
         /// <param name="backlog">
         /// The maximum number of clients that can be queued for TcpListener to accept.
         /// </param>
-        public MessageServer(int port, int bufferSize, bool secure, X509Certificate Certificate = null, int backlog = 10) : base(bufferSize)
+        public MessageServer(int port, int bufferSize, bool secure, X509Certificate Certificate = null, bool EnableAccessControl = false, bool EnableAccessControlChallenge = false, AccessControlType AccessControlType = AccessControlType.Whitelist, List<AccessControlRule> AccessControlRules = null, int backlog = 10) : base(bufferSize)
         {
-            Initialise(IPAddress.Any, port, secure, Certificate, backlog);
+            Initialise(IPAddress.Any, port, secure, Certificate, EnableAccessControl, EnableAccessControlChallenge, AccessControlType, AccessControlRules, backlog);
         }
 
         /// <summary>
@@ -232,12 +342,24 @@ namespace ACS.Messaging
         /// <param name="Certificate">
         /// The X509 Certificate required by the secure connection.
         /// </param>
+        /// <param name="EnableAccessControl">
+        /// Enable Access Control globally.
+        /// </param>
+        /// <param name="EnableAccessControlChallenge">
+        /// Enable Access Control Challenge globally.
+        /// </param>
+        /// <param name="AccessControlType">
+        /// Sets the Access Control Mode.
+        /// </param>
+        /// <param name="AccessControlRules">
+        /// Sets the inital rules for the Access Control List.
+        /// </param>
         /// <param name="backlog">
         /// The maximum number of clients that can be queued for TcpListener to accept.
         /// </param>
-        public MessageServer(string address, int port, bool secure, X509Certificate Certificate = null, int backlog = 10)
+        public MessageServer(string address, int port, bool secure, X509Certificate Certificate = null, bool EnableAccessControl = false, bool EnableAccessControlChallenge = false, AccessControlType AccessControlType = AccessControlType.Whitelist, List<AccessControlRule> AccessControlRules = null, int backlog = 10)
         {
-            Initialise(ParseAddress(address), port, secure, Certificate, backlog);
+            Initialise(ParseAddress(address), port, secure, Certificate, EnableAccessControl, EnableAccessControlChallenge, AccessControlType, AccessControlRules, backlog);
         }
 
         /// <summary>
@@ -255,12 +377,24 @@ namespace ACS.Messaging
         /// <param name="Certificate">
         /// The X509 Certificate required by the secure connection.
         /// </param>
+        /// <param name="EnableAccessControl">
+        /// Enable Access Control globally.
+        /// </param>
+        /// <param name="EnableAccessControlChallenge">
+        /// Enable Access Control Challenge globally.
+        /// </param>
+        /// <param name="AccessControlType">
+        /// Sets the Access Control Mode.
+        /// </param>
+        /// <param name="AccessControlRules">
+        /// Sets the inital rules for the Access Control List.
+        /// </param>
         /// <param name="backlog">
         /// The maximum number of clients that can be queued for TcpListener to accept.
         /// </param>
-        public MessageServer(IPAddress address, int port, bool secure, X509Certificate Certificate = null, int backlog = 10)
+        public MessageServer(IPAddress address, int port, bool secure, X509Certificate Certificate = null, bool EnableAccessControl = false, bool EnableAccessControlChallenge = false, AccessControlType AccessControlType = AccessControlType.Whitelist, List<AccessControlRule> AccessControlRules = null, int backlog = 10)
         {
-            Initialise(address, port, secure, Certificate, backlog);
+            Initialise(address, port, secure, Certificate, EnableAccessControl, EnableAccessControlChallenge, AccessControlType, AccessControlRules, backlog);
         }
 
         /// <summary>
@@ -281,12 +415,24 @@ namespace ACS.Messaging
         /// <param name="Certificate">
         /// The X509 Certificate required by the secure connection.
         /// </param>
+        /// <param name="EnableAccessControl">
+        /// Enable Access Control globally.
+        /// </param>
+        /// <param name="EnableAccessControlChallenge">
+        /// Enable Access Control Challenge globally.
+        /// </param>
+        /// <param name="AccessControlType">
+        /// Sets the Access Control Mode.
+        /// </param>
+        /// <param name="AccessControlRules">
+        /// Sets the inital rules for the Access Control List.
+        /// </param>
         /// <param name="backlog">
         /// The maximum number of clients that can be queued for TcpListener to accept.
         /// </param>
-        public MessageServer(string address, int port, int bufferSize, bool secure, X509Certificate Certificate = null, int backlog = 10) : base(bufferSize)
+        public MessageServer(string address, int port, int bufferSize, bool secure, X509Certificate Certificate = null, bool EnableAccessControl = false, bool EnableAccessControlChallenge = false, AccessControlType AccessControlType = AccessControlType.Whitelist, List<AccessControlRule> AccessControlRules = null, int backlog = 10) : base(bufferSize)
         {
-            Initialise(ParseAddress(address), port, secure, Certificate, backlog);
+            Initialise(ParseAddress(address), port, secure, Certificate, EnableAccessControl, EnableAccessControlChallenge, AccessControlType, AccessControlRules, backlog);
         }
 
         /// <summary>
@@ -307,12 +453,24 @@ namespace ACS.Messaging
         /// <param name="Certificate">
         /// The X509 Certificate required by the secure connection.
         /// </param>
+        /// <param name="EnableAccessControl">
+        /// Enable Access Control globally.
+        /// </param>
+        /// <param name="EnableAccessControlChallenge">
+        /// Enable Access Control Challenge globally.
+        /// </param>
+        /// <param name="AccessControlType">
+        /// Sets the Access Control Mode.
+        /// </param>
+        /// <param name="AccessControlRules">
+        /// Sets the inital rules for the Access Control List.
+        /// </param>
         /// <param name="backlog">
         /// The maximum number of clients that can be queued for TcpListener to accept.
         /// </param>
-        public MessageServer(IPAddress address, int port, int bufferSize, bool secure, X509Certificate Certificate = null, int backlog = 10) : base(bufferSize)
+        public MessageServer(IPAddress address, int port, int bufferSize, bool secure, X509Certificate Certificate = null, bool EnableAccessControl = false, bool EnableAccessControlChallenge = false, AccessControlType AccessControlType = AccessControlType.Whitelist, List<AccessControlRule> AccessControlRules = null, int backlog = 10) : base(bufferSize)
         {
-            Initialise(address, port, secure, Certificate, backlog);
+            Initialise(address, port, secure, Certificate, EnableAccessControl, EnableAccessControlChallenge, AccessControlType, AccessControlRules, backlog);
         }
         #endregion
 
@@ -507,6 +665,21 @@ namespace ACS.Messaging
             SslStream securestream = default(SslStream);
             NetworkStream stream = default(NetworkStream);
 
+            if (IsAccessControlEnabled is true)
+            {
+                bool isaccesscontrolpassed = false;
+
+                if (AccessControlMode == AccessControlType.Whitelist) { isaccesscontrolpassed = ProcessAccessControlWhitelist(client); }
+                if (AccessControlMode == AccessControlType.Blacklist) { isaccesscontrolpassed = ProcessAccessControlBlacklist(client); }
+                
+                if (isaccesscontrolpassed is false)
+                {
+                    client.GetStream().Close();
+                    client.Close();
+                    return;
+                }
+            }
+
             try
             {
                 // Configure the client to not delay send and receives.
@@ -565,6 +738,105 @@ namespace ACS.Messaging
         }
 
         /// <summary>
+        /// Check access control for Whitelist Mode.
+        /// </summary>
+        private bool ProcessAccessControlWhitelist(TcpClient client)
+        {
+            bool isaccesscontrolpassed = false;
+            if (accesscontrollist.Count() == 0) { return isaccesscontrolpassed; }
+            IPAddress ipaddress = ParseAddress(client.Client.RemoteEndPoint.ToString());
+            if (accesscontrollist.ContainsKey(ipaddress) is false) { return isaccesscontrolpassed; }
+            AccessControlRule rule = accesscontrollist[ipaddress];
+            if (rule.IsEnabled is false) { return isaccesscontrolpassed; }
+
+            if (rule.IsChallengeEnabled is true && IsAccessControlChallengeEnabled is true)
+            {
+                if (ProcessAccessControlChallenge(client, rule.Challenge) is false) { return isaccesscontrolpassed; }
+            }
+
+            isaccesscontrolpassed = true;
+            return isaccesscontrolpassed;
+        }
+
+        /// <summary>
+        /// Check access control for Blacklist Mode.
+        /// </summary>
+        private bool ProcessAccessControlBlacklist(TcpClient client)
+        {
+            bool isaccesscontrolpassed = true;
+            if (accesscontrollist.Count() == 0) { return isaccesscontrolpassed; }
+            IPAddress ipaddress = ParseAddress(client.Client.RemoteEndPoint.ToString());
+            if (accesscontrollist.ContainsKey(ipaddress) is false) { return isaccesscontrolpassed; }
+            AccessControlRule rule = accesscontrollist[ipaddress];
+            if (rule.IsEnabled is false) { return isaccesscontrolpassed; }
+
+            if (rule.IsChallengeEnabled is true && IsAccessControlChallengeEnabled is true)
+            {
+                if (ProcessAccessControlChallenge(client, rule.Challenge) is true) { return isaccesscontrolpassed; }
+            }
+
+            isaccesscontrolpassed = false;
+            return isaccesscontrolpassed;
+        }
+
+        /// <summary>
+        /// Check access control challenge.
+        /// </summary>
+        private bool ProcessAccessControlChallenge(TcpClient client, string challenge)
+        {
+            bool isaccesscontrolpassed = false;
+            ChallengeRequest request = new ChallengeRequest() { ID = Guid.NewGuid().ToString() };
+
+            try
+            {
+                MemoryStream mssend = new MemoryStream();
+                Json.SerializeAsync(mssend, request).Wait();
+                ushort sendsize = (ushort)(2 + mssend.Length);
+                List<byte> senddata = new List<byte>();
+                senddata.AddRange(BitConverter.GetBytes(sendsize));
+                senddata.AddRange(mssend.GetBuffer());
+                byte[] sendbuffer = senddata.ToArray();
+                client.NoDelay = true;
+                NetworkStream stream = client.GetStream();
+                SslStream securestream = null;
+                byte[] readbuffer = new byte[64 * 1024];
+                int bytecount = 0;
+                ushort readsize = 0;
+                MemoryStream msread;
+                ChallengeResponse response;
+
+                if (Secure is false)
+                {
+                    stream.WriteAsync(sendbuffer, 0, sendbuffer.Length).Wait();
+                    stream.FlushAsync().Wait();
+                    bytecount = stream.ReadAsync(readbuffer, 0, readbuffer.Count()).Result;
+                }
+                else if (Secure is true)
+                {
+                    securestream = new SslStream(client.GetStream(), false);
+                    securestream.AuthenticateAsServer(servercertificate, false, SslProtocols.Tls12, true);
+                    securestream.WriteAsync(sendbuffer, 0, sendbuffer.Length).Wait();
+                    securestream.FlushAsync().Wait();
+                    bytecount = securestream.ReadAsync(readbuffer, 0, readbuffer.Count()).Result;
+                }
+
+                if (bytecount == 0) { return isaccesscontrolpassed; }
+                readsize = BitConverter.ToUInt16(readbuffer, 0);
+                msread = new MemoryStream(readbuffer, 2, readsize - 2);
+                response = (ChallengeResponse)Json.DeserializeAsync(msread).Result;
+                if (response.ID.Equals(request.ID) is false || challenge.Equals(response.Challenge) is false) { return isaccesscontrolpassed; }
+            }
+            catch (Exception Ex)
+            {
+                OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.Message));
+                return isaccesscontrolpassed;
+            }
+
+            isaccesscontrolpassed = true;
+            return isaccesscontrolpassed;
+        }
+
+        /// <summary>
         /// Creates the server and starts listening for incoming connection requests.
         /// </summary>
         /// <param name="ipAddress">
@@ -579,11 +851,36 @@ namespace ACS.Messaging
         /// <param name="Certificate">
         /// The certificate to use by the host.
         /// </param>
+        /// <param name="EnableAccessControl">
+        /// Enable Access Control globally.
+        /// </param>
+        /// <param name="EnableAccessControlChallenge">
+        /// Enable Access Control Challenge globally.
+        /// </param>
+        /// <param name="AccessControlType">
+        /// Sets the Access Control Mode.
+        /// </param>
+        /// <param name="AccessControlRules">
+        /// Sets the inital rules for the Access Control List.
+        /// </param>
         /// <param name="backlog">
         /// The maximum number of clients that can be queued for TcpListener to accept.
         /// </param>
-        private void Initialise(IPAddress ipAddress, int port, bool secure, X509Certificate Certificate, int backlog)
+        private void Initialise(IPAddress ipAddress, int port, bool secure, X509Certificate Certificate, bool EnableAccessControl, bool EnableAccessControlChallenge, AccessControlType AccessControlType, List<AccessControlRule> AccessControlRules, int backlog)
         {
+            // Setup initial Access Control
+            IsAccessControlEnabled = EnableAccessControl;
+            IsAccessControlChallengeEnabled = EnableAccessControlChallenge;
+            AccessControlMode = AccessControlType;
+
+            if (EnableAccessControl is true && AccessControlRules != null)
+            {
+                foreach (AccessControlRule rule in AccessControlRules)
+                {
+                    if (accesscontrollist.ContainsKey(rule.IPAddress) is false) { accesscontrollist.Add(rule.IPAddress, rule); }
+                }
+            }
+
             // Set backlog variable
             listenerbacklog = backlog;
             // Listen on the first IPv4 address assigned to the local machine.
