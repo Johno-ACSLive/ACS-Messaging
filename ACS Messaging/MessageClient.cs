@@ -400,9 +400,12 @@ namespace ACS.Messaging
                         Message.Clear();
                         // Asynchronously read the data.
                         byteCount = await stream.ReadAsync(buffer, 0, buffer.Count()).ConfigureAwait(false);
-                        Message.AddRange(buffer.Take(byteCount));
-                        // Notify any listeners that data was received.
-                        OnMessageReceived(new MessageReceivedEventArgs(server, Message.ToArray()));
+                        if (byteCount > 0)
+                        {
+                            Message.AddRange(buffer.Take(byteCount));
+                            // Notify any listeners that data was received.
+                            OnMessageReceived(new MessageReceivedEventArgs(server, Message.ToArray()));
+                        }
                     }
                     catch (InvalidOperationException)
                     {
@@ -455,9 +458,12 @@ namespace ACS.Messaging
                         Message.Clear();
                         // Asynchronously read the data.
                         byteCount = await securestream.ReadAsync(buffer, 0, buffer.Count()).ConfigureAwait(false);
-                        Message.AddRange(buffer.Take(byteCount));
-                        // Notify any listeners that data was received.
-                        OnMessageReceived(new MessageReceivedEventArgs(server, Message.ToArray()));
+                        if (byteCount > 0)
+                        {
+                            Message.AddRange(buffer.Take(byteCount));
+                            // Notify any listeners that data was received.
+                            OnMessageReceived(new MessageReceivedEventArgs(server, Message.ToArray()));
+                        }
                     }
                     catch (InvalidOperationException)
                     {
