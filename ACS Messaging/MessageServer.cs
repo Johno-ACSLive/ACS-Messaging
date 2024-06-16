@@ -572,6 +572,66 @@ namespace ACS.Messaging
         }
 
         /// <summary>
+        /// Add the specified Access Control Rule.
+        /// </summary>
+        /// <param name="Rule">
+        /// The Access Control Rule.
+        /// </param>
+        public void AddAccessControlRule(AccessControlRule Rule)
+        {
+            if (accesscontrollist.ContainsKey(Rule.IPAddress) is false) { accesscontrollist.Add(Rule.IPAddress, Rule); }
+
+            if (IsAccessControlEnabled is true && AccessControlMode == AccessControlType.Blacklist)
+            {
+                IEnumerable<TcpClient> tcpclients = clients.Select(c => new { client = c, host = c.Value }).Where(x => x.host.HostName == Rule.IPAddress.ToString()).Select(x => x.client.Key);
+                foreach (TcpClient client in tcpclients)
+                {
+                    ProcessAccessControl(client, true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update the specified Access Control Rule.
+        /// </summary>
+        /// <param name="Rule">
+        /// The Access Control Rule.
+        /// </param>
+        public void UpdateAccessControlRule(AccessControlRule Rule)
+        {
+            if (accesscontrollist.ContainsKey(Rule.IPAddress) is true) { accesscontrollist[Rule.IPAddress] = Rule; }
+
+            if (IsAccessControlEnabled is true)
+            {
+                IEnumerable<TcpClient> tcpclients = clients.Select(c => new { client = c, host = c.Value }).Where(x => x.host.HostName == Rule.IPAddress.ToString()).Select(x => x.client.Key);
+                foreach (TcpClient client in tcpclients)
+                {
+                    ProcessAccessControl(client, true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remove the specified Access Control Rule.
+        /// </summary>
+        /// <param name="Rule">
+        /// The Access Control Rule.
+        /// </param>
+        public void RemoveAccessControlRule(AccessControlRule Rule)
+        {
+            if (accesscontrollist.ContainsKey(Rule.IPAddress) is true) { accesscontrollist.Remove(Rule.IPAddress); }
+
+            if (IsAccessControlEnabled is true && AccessControlMode == AccessControlType.Whitelist)
+            {
+                IEnumerable<TcpClient> tcpclients = clients.Select(c => new { client = c, host = c.Value }).Where(x => x.host.HostName == Rule.IPAddress.ToString()).Select(x => x.client.Key);
+                foreach (TcpClient client in tcpclients)
+                {
+                    ProcessAccessControl(client, true);
+                }
+            }
+        }
+
+        /// <summary>
         /// Updates certifcate used when accepting new connections.
         /// If secure is disabled this function has no effect.
         /// </summary>
@@ -664,21 +724,8 @@ namespace ACS.Messaging
         {
             SslStream securestream = default(SslStream);
             NetworkStream stream = default(NetworkStream);
-
-            if (IsAccessControlEnabled is true)
-            {
-                bool isaccesscontrolpassed = false;
-
-                if (AccessControlMode == AccessControlType.Whitelist) { isaccesscontrolpassed = ProcessAccessControlWhitelist(client); }
-                if (AccessControlMode == AccessControlType.Blacklist) { isaccesscontrolpassed = ProcessAccessControlBlacklist(client); }
-                
-                if (isaccesscontrolpassed is false)
-                {
-                    client.GetStream().Close();
-                    client.Close();
-                    return;
-                }
-            }
+            bool isaccesscontrolpassed = ProcessAccessControl(client);
+            if (isaccesscontrolpassed is false) { return; }
 
             try
             {
@@ -737,10 +784,31 @@ namespace ACS.Messaging
             }
         }
 
+        private bool ProcessAccessControl(TcpClient client, bool SkipChallenge = false)
+        {
+            bool isaccesscontrolpassed = false;
+
+            if (IsAccessControlEnabled is true)
+            {
+                if (AccessControlMode == AccessControlType.Whitelist) { isaccesscontrolpassed = ProcessAccessControlWhitelist(client, SkipChallenge); }
+                if (AccessControlMode == AccessControlType.Blacklist) { isaccesscontrolpassed = ProcessAccessControlBlacklist(client, SkipChallenge); }
+
+                if (isaccesscontrolpassed is false)
+                {
+                    client.GetStream().Close();
+                    client.Close();
+                    return isaccesscontrolpassed;
+                }
+            }
+
+            isaccesscontrolpassed = true;
+            return isaccesscontrolpassed;
+        }
+
         /// <summary>
         /// Check access control for Whitelist Mode.
         /// </summary>
-        private bool ProcessAccessControlWhitelist(TcpClient client)
+        private bool ProcessAccessControlWhitelist(TcpClient client, bool SkipChallenge)
         {
             bool isaccesscontrolpassed = false;
             if (accesscontrollist.Count() == 0) { return isaccesscontrolpassed; }
@@ -749,7 +817,7 @@ namespace ACS.Messaging
             AccessControlRule rule = accesscontrollist[ipaddress];
             if (rule.IsEnabled is false) { return isaccesscontrolpassed; }
 
-            if (rule.IsChallengeEnabled is true && IsAccessControlChallengeEnabled is true)
+            if (rule.IsChallengeEnabled is true && IsAccessControlChallengeEnabled is true && SkipChallenge is false)
             {
                 if (ProcessAccessControlChallenge(client, rule.Challenge) is false) { return isaccesscontrolpassed; }
             }
@@ -761,7 +829,7 @@ namespace ACS.Messaging
         /// <summary>
         /// Check access control for Blacklist Mode.
         /// </summary>
-        private bool ProcessAccessControlBlacklist(TcpClient client)
+        private bool ProcessAccessControlBlacklist(TcpClient client, bool SkipChallenge)
         {
             bool isaccesscontrolpassed = true;
             if (accesscontrollist.Count() == 0) { return isaccesscontrolpassed; }
@@ -770,7 +838,7 @@ namespace ACS.Messaging
             AccessControlRule rule = accesscontrollist[ipaddress];
             if (rule.IsEnabled is false) { return isaccesscontrolpassed; }
 
-            if (rule.IsChallengeEnabled is true && IsAccessControlChallengeEnabled is true)
+            if (rule.IsChallengeEnabled is true && IsAccessControlChallengeEnabled is true && SkipChallenge is false)
             {
                 if (ProcessAccessControlChallenge(client, rule.Challenge) is true) { return isaccesscontrolpassed; }
             }
