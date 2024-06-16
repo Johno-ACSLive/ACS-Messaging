@@ -6,5 +6,13 @@ namespace ACS.Messaging
     {
         [JsonInclude]
         internal string ID { get; set; }
+        [JsonInclude]
+        internal ChallengeRequestType ChallengeType { get; set; }
+
+        internal enum ChallengeRequestType
+        {
+            ChallengeRequested,
+            ChallengeSuccessful,
+        }
     }
 }

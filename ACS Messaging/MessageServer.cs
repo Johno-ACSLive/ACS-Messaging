@@ -784,6 +784,9 @@ namespace ACS.Messaging
             }
         }
 
+        /// <summary>
+        /// Checks is Access Control is Enabled and processes the client as required.
+        /// </summary>
         private bool ProcessAccessControl(TcpClient client, bool SkipChallenge = false)
         {
             bool isaccesscontrolpassed = false;
@@ -853,32 +856,26 @@ namespace ACS.Messaging
         private bool ProcessAccessControlChallenge(TcpClient client, string challenge)
         {
             bool isaccesscontrolpassed = false;
-            ChallengeRequest request = new ChallengeRequest() { ID = Guid.NewGuid().ToString() };
+            ChallengeRequest request = new ChallengeRequest() { ID = Guid.NewGuid().ToString(), ChallengeType = ChallengeRequest.ChallengeRequestType.ChallengeRequested };
+            MemoryStream ms = new MemoryStream();
+            ushort size;
+            List<byte> data = new List<byte>();
+            byte[] buffer;
+            NetworkStream stream = client.GetStream();
+            SslStream securestream = null;
+            byte[] readbuffer = new byte[1024 + 2];
+            int bytecount = 0;
+            ChallengeResponse response;
 
             try
             {
-                MemoryStream mssend = new MemoryStream();
-                Json.SerializeAsync(mssend, request).Wait();
-                
-                if (mssend.Length > 1024)
-                {
-                    OnLog(new LogEventArgs(DateTime.Now, "ERROR", "Serialised Challenge Request exceeds 1024 bytes."));
-                    return isaccesscontrolpassed;
-                };
-                
-                ushort sendsize = (ushort)(2 + mssend.Length);
-                List<byte> senddata = new List<byte>();
-                senddata.AddRange(BitConverter.GetBytes(sendsize));
-                senddata.AddRange(mssend.GetBuffer());
-                byte[] sendbuffer = senddata.ToArray();
+                Json.SerializeAsync(ms, request).Wait();
+                // Length check not needed for ms as ChallengeRequest will never be close to 1KB in size
+                size = (ushort)(2 + ms.Length);
+                data.AddRange(BitConverter.GetBytes(size));
+                data.AddRange(ms.GetBuffer());
+                buffer = data.ToArray();
                 client.NoDelay = true;
-                NetworkStream stream = client.GetStream();
-                SslStream securestream = null;
-                byte[] readbuffer = new byte[1024 + 2];
-                int bytecount = 0;
-                ushort readsize = 0;
-                MemoryStream msread;
-                ChallengeResponse response;
 
                 // Backup the current timeout value
                 int receivetimeout = client.ReceiveTimeout;
@@ -887,7 +884,7 @@ namespace ACS.Messaging
 
                 if (Secure is false)
                 {
-                    stream.WriteAsync(sendbuffer, 0, sendbuffer.Length).Wait();
+                    stream.WriteAsync(buffer, 0, buffer.Length).Wait();
                     stream.FlushAsync().Wait();
                     bytecount = stream.ReadAsync(readbuffer, 0, readbuffer.Count()).Result;
                 }
@@ -895,7 +892,7 @@ namespace ACS.Messaging
                 {
                     securestream = new SslStream(client.GetStream(), false);
                     securestream.AuthenticateAsServer(servercertificate, false, SslProtocols.Tls12, true);
-                    securestream.WriteAsync(sendbuffer, 0, sendbuffer.Length).Wait();
+                    securestream.WriteAsync(buffer, 0, buffer.Length).Wait();
                     securestream.FlushAsync().Wait();
                     bytecount = securestream.ReadAsync(readbuffer, 0, readbuffer.Count()).Result;
                 }
@@ -903,16 +900,43 @@ namespace ACS.Messaging
                 // Restore the timeout value
                 client.ReceiveTimeout = receivetimeout;
                 if (bytecount == 0) { return isaccesscontrolpassed; }
-                readsize = BitConverter.ToUInt16(readbuffer, 0);
-                if (bytecount != readsize) { return isaccesscontrolpassed; }
-                msread = new MemoryStream(readbuffer, 2, readsize - 2);
-                response = (ChallengeResponse)Json.DeserializeAsync(msread).Result;
+                size = BitConverter.ToUInt16(readbuffer, 0);
+                if (bytecount != size) { return isaccesscontrolpassed; }
+                ms = new MemoryStream(readbuffer, 2, size - 2);
+                response = (ChallengeResponse)Json.DeserializeAsync(ms).Result;
                 if (response.ID.Equals(request.ID) is false || challenge.Equals(response.Challenge) is false) { return isaccesscontrolpassed; }
             }
             catch (Exception Ex)
             {
                 OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.Message));
                 return isaccesscontrolpassed;
+            }
+
+            try
+            {
+                ms = new MemoryStream();
+                request.ChallengeType = ChallengeRequest.ChallengeRequestType.ChallengeSuccessful;
+                Json.SerializeAsync(ms, request).Wait();
+                size = (ushort)(2 + ms.Length);
+                data.Clear();
+                data.AddRange(BitConverter.GetBytes(size));
+                data.AddRange(ms.GetBuffer());
+                buffer = data.ToArray();
+
+                if (Secure is false)
+                {
+                    stream.WriteAsync(buffer, 0, buffer.Length).Wait();
+                    stream.FlushAsync().Wait();
+                }
+                else if (Secure is true)
+                {
+                    securestream.WriteAsync(buffer, 0, buffer.Length).Wait();
+                    securestream.FlushAsync().Wait();
+                }
+            }
+            catch (Exception Ex)
+            {
+                OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.Message));
             }
 
             isaccesscontrolpassed = true;
