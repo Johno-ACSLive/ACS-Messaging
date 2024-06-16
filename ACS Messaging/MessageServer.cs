@@ -859,6 +859,13 @@ namespace ACS.Messaging
             {
                 MemoryStream mssend = new MemoryStream();
                 Json.SerializeAsync(mssend, request).Wait();
+                
+                if (mssend.Length > 1024)
+                {
+                    OnLog(new LogEventArgs(DateTime.Now, "ERROR", "Serialised Challenge Request exceeds 1024 bytes."));
+                    return isaccesscontrolpassed;
+                };
+                
                 ushort sendsize = (ushort)(2 + mssend.Length);
                 List<byte> senddata = new List<byte>();
                 senddata.AddRange(BitConverter.GetBytes(sendsize));
@@ -867,11 +874,16 @@ namespace ACS.Messaging
                 client.NoDelay = true;
                 NetworkStream stream = client.GetStream();
                 SslStream securestream = null;
-                byte[] readbuffer = new byte[64 * 1024];
+                byte[] readbuffer = new byte[1024 + 2];
                 int bytecount = 0;
                 ushort readsize = 0;
                 MemoryStream msread;
                 ChallengeResponse response;
+
+                // Backup the current timeout value
+                int receivetimeout = client.ReceiveTimeout;
+                // 30 seconds should be enough time for a client connection to respond to the challenge request
+                client.ReceiveTimeout = 30000;
 
                 if (Secure is false)
                 {
@@ -888,8 +900,11 @@ namespace ACS.Messaging
                     bytecount = securestream.ReadAsync(readbuffer, 0, readbuffer.Count()).Result;
                 }
 
+                // Restore the timeout value
+                client.ReceiveTimeout = receivetimeout;
                 if (bytecount == 0) { return isaccesscontrolpassed; }
                 readsize = BitConverter.ToUInt16(readbuffer, 0);
+                if (bytecount != readsize) { return isaccesscontrolpassed; }
                 msread = new MemoryStream(readbuffer, 2, readsize - 2);
                 response = (ChallengeResponse)Json.DeserializeAsync(msread).Result;
                 if (response.ID.Equals(request.ID) is false || challenge.Equals(response.Challenge) is false) { return isaccesscontrolpassed; }
