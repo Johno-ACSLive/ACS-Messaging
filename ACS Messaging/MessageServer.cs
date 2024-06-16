@@ -815,7 +815,8 @@ namespace ACS.Messaging
         {
             bool isaccesscontrolpassed = false;
             if (accesscontrollist.Count() == 0) { return isaccesscontrolpassed; }
-            IPAddress ipaddress = ParseAddress(client.Client.RemoteEndPoint.ToString());
+            IPEndPoint ipendpoint = (IPEndPoint)client.Client.RemoteEndPoint;
+            IPAddress ipaddress = ipendpoint.Address;
             if (accesscontrollist.ContainsKey(ipaddress) is false) { return isaccesscontrolpassed; }
             AccessControlRule rule = accesscontrollist[ipaddress];
             if (rule.IsEnabled is false) { return isaccesscontrolpassed; }
@@ -836,7 +837,8 @@ namespace ACS.Messaging
         {
             bool isaccesscontrolpassed = true;
             if (accesscontrollist.Count() == 0) { return isaccesscontrolpassed; }
-            IPAddress ipaddress = ParseAddress(client.Client.RemoteEndPoint.ToString());
+            IPEndPoint ipendpoint = (IPEndPoint)client.Client.RemoteEndPoint;
+            IPAddress ipaddress = ipendpoint.Address;
             if (accesscontrollist.ContainsKey(ipaddress) is false) { return isaccesscontrolpassed; }
             AccessControlRule rule = accesscontrollist[ipaddress];
             if (rule.IsEnabled is false) { return isaccesscontrolpassed; }
