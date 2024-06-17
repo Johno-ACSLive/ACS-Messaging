@@ -875,7 +875,7 @@ namespace ACS.Messaging
                 // Length check not needed for ms as ChallengeRequest will never be close to 1KB in size
                 size = (ushort)(2 + ms.Length);
                 data.AddRange(BitConverter.GetBytes(size));
-                data.AddRange(ms.GetBuffer());
+                data.AddRange(ms.ToArray());
                 buffer = data.ToArray();
                 client.NoDelay = true;
 
@@ -888,7 +888,8 @@ namespace ACS.Messaging
                 {
                     stream.WriteAsync(buffer, 0, buffer.Length).Wait();
                     stream.FlushAsync().Wait();
-                    bytecount = stream.ReadAsync(readbuffer, 0, readbuffer.Count()).Result;
+                    // We can't use async stream read/write if we want send/receive timeouts to work
+                    bytecount = stream.Read(readbuffer, 0, readbuffer.Count());
                 }
                 else if (Secure is true)
                 {
@@ -896,7 +897,7 @@ namespace ACS.Messaging
                     securestream.AuthenticateAsServer(servercertificate, false, SslProtocols.Tls12, true);
                     securestream.WriteAsync(buffer, 0, buffer.Length).Wait();
                     securestream.FlushAsync().Wait();
-                    bytecount = securestream.ReadAsync(readbuffer, 0, readbuffer.Count()).Result;
+                    bytecount = securestream.Read(readbuffer, 0, readbuffer.Count());
                 }
 
                 // Restore the timeout value
@@ -905,8 +906,19 @@ namespace ACS.Messaging
                 size = BitConverter.ToUInt16(readbuffer, 0);
                 if (bytecount != size) { return isaccesscontrolpassed; }
                 ms = new MemoryStream(readbuffer, 2, size - 2);
-                response = (ChallengeResponse)Json.DeserializeAsync(ms).Result;
+                // Because we can't use generics - lazyily generating new object
+                response = (ChallengeResponse)Json.DeserializeAsync(ms, new ChallengeResponse()).Result;
                 if (response.ID.Equals(request.ID) is false || challenge.Equals(response.Challenge) is false) { return isaccesscontrolpassed; }
+            }
+            catch (IOException IOe)
+            {
+                if (IOe.InnerException is SocketException)
+                {
+                    var se = IOe.InnerException as SocketException;
+                    if (se.SocketErrorCode != SocketError.TimedOut) { OnLog(new LogEventArgs(DateTime.Now, "ERROR", se.Message)); }
+                }
+
+                return isaccesscontrolpassed;
             }
             catch (Exception Ex)
             {
@@ -922,7 +934,7 @@ namespace ACS.Messaging
                 size = (ushort)(2 + ms.Length);
                 data.Clear();
                 data.AddRange(BitConverter.GetBytes(size));
-                data.AddRange(ms.GetBuffer());
+                data.AddRange(ms.ToArray());
                 buffer = data.ToArray();
 
                 if (Secure is false)

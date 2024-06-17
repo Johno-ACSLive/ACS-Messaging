@@ -6,9 +6,10 @@ namespace ACS.Messaging
 {
     public static class Json
     {
-        public static async Task<object> DeserializeAsync(Stream Stream)
+        public static async Task<object> DeserializeAsync(Stream Stream, object Object)
         {
-            return await JsonSerializer.DeserializeAsync<object>(Stream);
+            // Can't use generics so we need to set object type
+            return await JsonSerializer.DeserializeAsync(Stream, Object.GetType());
         }
 
         public static async Task SerializeAsync(Stream Stream, object value)

@@ -196,8 +196,9 @@ namespace ACS.Messaging
 
                 if (isaccesscontrolpassed is false)
                 {
-                    client.GetStream().Close();
+                    stream.Close();
                     client.Close();
+                    OnConnectionFailed(new ConnectionEventArgs(server));
                     return;
                 }
 
@@ -260,20 +261,21 @@ namespace ACS.Messaging
                 {
                     if (server.Secure is false)
                     {
-                        bytecount = stream.ReadAsync(buffer, 0, buffer.Count()).Result;
+                        bytecount = stream.Read(buffer, 0, buffer.Count());
                     }
                     else if (server.Secure is true)
                     {
                         securestream = new SslStream(stream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
                         securestream.AuthenticateAsClient(server.HostName, null, SslProtocols.Tls12, false);
-                        bytecount = securestream.ReadAsync(buffer, 0, buffer.Count()).Result;
+                        bytecount = securestream.Read(buffer, 0, buffer.Count());
                     }
 
                     if (bytecount == 0) { return isaccesscontrolpassed; }
                     size = BitConverter.ToUInt16(buffer, 0);
                     if (bytecount != size) { return isaccesscontrolpassed; }
                     ms = new MemoryStream(buffer, 2, size - 2);
-                    request = (ChallengeRequest)Json.DeserializeAsync(ms).Result;
+                    // Because we can't use generics - lazyily generating new object
+                    request = (ChallengeRequest)Json.DeserializeAsync(ms, new ChallengeRequest()).Result;
                 }
                 catch (Exception Ex)
                 {
@@ -287,7 +289,7 @@ namespace ACS.Messaging
                     response.Challenge = Challenge;
 
                     ms = new MemoryStream();
-                    Json.SerializeAsync(ms, request).Wait();
+                    Json.SerializeAsync(ms, response).Wait();
 
                     if (ms.Length > 1024)
                     {
@@ -297,20 +299,20 @@ namespace ACS.Messaging
 
                     size = (ushort)(2 + ms.Length);
                     data.AddRange(BitConverter.GetBytes(size));
-                    data.AddRange(ms.GetBuffer());
+                    data.AddRange(ms.ToArray());
                     buffer = data.ToArray();
 
                     if (server.Secure is false)
                     {
                         stream.WriteAsync(buffer, 0, buffer.Length).Wait();
                         stream.FlushAsync().Wait();
-                        bytecount = stream.ReadAsync(buffer, 0, buffer.Count()).Result;
+                        bytecount = stream.Read(buffer, 0, buffer.Count());
                     }
                     else if (server.Secure is true)
                     {
                         securestream.WriteAsync(buffer, 0, buffer.Length).Wait();
                         securestream.FlushAsync().Wait();
-                        bytecount = securestream.ReadAsync(buffer, 0, buffer.Count()).Result;
+                        bytecount = securestream.Read(buffer, 0, buffer.Count());
                     }
 
                     // Restore the timeout value
@@ -319,7 +321,8 @@ namespace ACS.Messaging
                     size = BitConverter.ToUInt16(buffer, 0);
                     if (bytecount != size) { return isaccesscontrolpassed; }
                     ms = new MemoryStream(buffer, 2, size - 2);
-                    request = (ChallengeRequest)Json.DeserializeAsync(ms).Result;
+                    // Because we can't use generics - lazyily generating new object
+                    request = (ChallengeRequest)Json.DeserializeAsync(ms, new ChallengeRequest()).Result;
                 }
                 catch (Exception Ex)
                 {
