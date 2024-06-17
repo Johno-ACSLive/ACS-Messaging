@@ -2,7 +2,12 @@
 using System.Text;
 
 ManualResetEventSlim exitevent = new ManualResetEventSlim();
-MessageClient mc = new MessageClient("localhost", 5000, false); // Create a new instance of MessageClient. Configure to connect to localhost on port 5000 and for the sample we won't be using encryption
+// Configure to connect to localhost on port 5000 and for the sample we won't be using encryption
+string host = "localhost";
+int port = 5000;
+bool issecure = false;
+// Create a new instance of MessageClient.
+MessageClient mc = new MessageClient(host, port, issecure); 
 
 Console.CancelKeyPress += (sender, EventArgs) =>
 {
@@ -14,11 +19,9 @@ Console.WriteLine(string.Format("{0} - {1} - {2}", DateTime.UtcNow, "Sample Clie
 
 try
 {
-    mc.ConnectionAccepted += ConnectionAccepted; // Setup event handler for Connection Accepted
-    mc.ConnectionClosed += ConnectionClosed; // Setup event handler for Connection Closed
-    mc.ConnectionFailed += ConnectionFailed; // Setup event handler for Connection Failed
-    mc.MessageReceived += MessageReceived; // Setup event handler for Message Received
-    mc.Log += Log; // Setup event handler for Log
+    RegisterEventHandlers();
+    mc.Challenge = "bob";
+    mc.IsChallengeEnabled = true;
     mc.Connect();
 }
 catch (Exception)
@@ -27,10 +30,30 @@ catch (Exception)
     Console.WriteLine(string.Format("{0} - {1} - {2}: {3}", DateTime.UtcNow, "Sample Client", "Is Connected", mc.IsConnected));
 }
 
-string? message = Console.ReadLine();
-if (message != null)
+bool isrunning = true;
+
+while (isrunning)
 {
-    mc.SendData(Encoding.UTF8.GetBytes(message));
+    string? command = Console.ReadLine();
+    switch (command)
+    {
+        case "SendMessage":
+            string? message = Console.ReadLine();
+            if (message != null) { mc.SendData(Encoding.UTF8.GetBytes(message)); }
+            break;
+        case "EnableChallenge":
+            mc.IsChallengeEnabled = true;
+            break;
+        case "DisableChallenge":
+            mc.IsChallengeEnabled = false;
+            break;
+        case "SetChallenge":
+            mc.Challenge = "bob1";
+            break;
+        case "Exit":
+            isrunning = false;
+            break;
+    }
 }
 
 // Console waits here for termination signal
@@ -40,11 +63,30 @@ Console.WriteLine(string.Format("{0} - {1} - {2}", DateTime.UtcNow, "Sample Clie
 
 if (mc != null)
 {
+    UnregisterEventHandlers();
     mc.Dispose();
 }
 
 Console.WriteLine(string.Format("{0} - {1} - {2}", DateTime.UtcNow, "Sample Client", "Disconnected!"));
 exitevent.Dispose();
+
+void RegisterEventHandlers()
+{
+    mc.ConnectionAccepted += ConnectionAccepted; // Register event handler for Connection Accepted
+    mc.ConnectionClosed += ConnectionClosed; // Register event handler for Connection Closed
+    mc.ConnectionFailed += ConnectionFailed; // Register event handler for Connection Failed
+    mc.MessageReceived += MessageReceived; // Register event handler for Message Received
+    mc.Log += Log; // Register event handler for Log
+}
+
+void UnregisterEventHandlers()
+{
+    mc.ConnectionAccepted -= ConnectionAccepted; // Unregister event handler for Connection Accepted
+    mc.ConnectionClosed -= ConnectionClosed; // Unregister event handler for Connection Closed
+    mc.ConnectionFailed -= ConnectionFailed; // Unregister event handler for Connection Failed
+    mc.MessageReceived -= MessageReceived; // Unregister event handler for Message Received
+    mc.Log -= Log; // Unregister event handler for Log
+}
 
 void ConnectionAccepted(object sender, ConnectionEventArgs e)
 {
@@ -64,8 +106,14 @@ void ConnectionFailed(object sender, ConnectionEventArgs e)
     Console.WriteLine(string.Format("{0} - {1} - {2} - {3}", DateTime.UtcNow, "Sample Client", "Connection Failed", e.Host.ToString()));
     Console.WriteLine(string.Format("{0} - {1} - {2}: {3}", DateTime.UtcNow, "Sample Client", "Is Connected", mc.IsConnected));
     Console.WriteLine(string.Format("{0} - {1} - {2}", DateTime.UtcNow, "Sample Client", "Waiting 5 seconds to retry..."));
+    UnregisterEventHandlers();
+    mc.Dispose();
     Task.Delay(5000).Wait();
     Console.WriteLine(string.Format("{0} - {1} - {2}", DateTime.UtcNow, "Sample Client", "Connecting!"));
+    mc = new MessageClient(host, port, issecure);
+    RegisterEventHandlers();
+    mc.Challenge = "bob";
+    mc.IsChallengeEnabled = true;
     mc.Connect();
 }
 

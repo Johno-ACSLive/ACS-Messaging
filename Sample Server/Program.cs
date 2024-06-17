@@ -1,4 +1,5 @@
 ﻿using ACS.Messaging;
+using System.Net;
 using System.Text;
 
 // This enables the console to wait until the server ends - useful for containerised services also
@@ -16,10 +17,7 @@ Console.CancelKeyPress += (sender, EventArgs) =>
 
 try
 {
-    ms.ConnectionAccepted += ConnectionAccepted; // Setup event handler for Connection Accepted
-    ms.ConnectionClosed += ConnectionClosed; // Setup event handler for Connection Closed
-    ms.MessageReceived += MessageReceived; // Setup event handler for Message Received
-    ms.Log += Log; // Setup event handler for Log
+    RegisterEventHandlers();
     Console.WriteLine(string.Format("{0} - {1} - {2}", DateTime.UtcNow, "Sample Server", "Listening on Port: 5000"));
 }
 catch (Exception)
@@ -29,6 +27,49 @@ catch (Exception)
 
 Console.WriteLine(string.Format("{0} - {1} - {2}", DateTime.UtcNow, "Sample Server", "Started!"));
 
+bool isrunning = true;
+
+while (isrunning)
+{
+    string? command = Console.ReadLine();
+    switch (command)
+    {
+        case "EnableACL":
+            ms.IsAccessControlEnabled = true;
+            break;
+        case "DisableACL":
+            ms.IsAccessControlEnabled = false;
+            break;
+        case "EnableChallenge":
+            ms.IsAccessControlChallengeEnabled = true;
+            break;
+        case "DisableChallenge":
+            ms.IsAccessControlChallengeEnabled = false;
+            break;
+        case "SetACLModeWhitelist":
+            ms.AccessControlMode = MessageServer.AccessControlType.Whitelist;
+            break;
+        case "SetACLModeBlacklist":
+            ms.AccessControlMode = MessageServer.AccessControlType.Blacklist;
+            break;
+        case "AddACLRule":
+            ms.AddAccessControlRule(new(IPAddress.Parse("127.0.0.1")) { IsEnabled = true, IsChallengeEnabled = false });
+            break;
+        case "RemoveACLRule":
+            ms.RemoveAccessControlRule(new(IPAddress.Parse("127.0.0.1")) { IsEnabled = true, IsChallengeEnabled = false });
+            break;
+        case "AddACLRuleWithChallenge":
+            ms.AddAccessControlRule(new(IPAddress.Parse("127.0.0.1")) { IsEnabled = true, IsChallengeEnabled = true, Challenge = "bob" });
+            break;
+        case "RemoveACLRuleWithChallenge":
+            ms.RemoveAccessControlRule(new(IPAddress.Parse("127.0.0.1")) { IsEnabled = true, IsChallengeEnabled = true, Challenge = "bob" });
+            break;
+        case "Exit":
+            isrunning = false;
+            break;
+    }
+}
+
 // Console waits here for termination signal
 exitevent.Wait();
 
@@ -36,11 +77,28 @@ Console.WriteLine(string.Format("{0} - {1} - {2}", DateTime.UtcNow, "Sample Serv
 
 if (ms != null)
 {
+    UnregisterEventHandlers();
     ms.Dispose();
 }
 
 Console.WriteLine(string.Format("{0} - {1} - {2}", DateTime.UtcNow, "Sample Server", "Stopped!"));
 exitevent.Dispose();
+
+void RegisterEventHandlers()
+{
+    ms.ConnectionAccepted += ConnectionAccepted; // Register event handler for Connection Accepted
+    ms.ConnectionClosed += ConnectionClosed; // Register event handler for Connection Closed
+    ms.MessageReceived += MessageReceived; // Register event handler for Message Received
+    ms.Log += Log; // Register event handler for Log
+}
+
+void UnregisterEventHandlers()
+{
+    ms.ConnectionAccepted -= ConnectionAccepted; // Unregister event handler for Connection Accepted
+    ms.ConnectionClosed -= ConnectionClosed; // Unregister event handler for Connection Closed
+    ms.MessageReceived -= MessageReceived; // Unregister event handler for Message Received
+    ms.Log -= Log; // Unregister event handler for Log
+}
 
 void ConnectionAccepted(object sender, ConnectionEventArgs e)
 {
@@ -58,7 +116,7 @@ void MessageReceived(object sender, MessageReceivedEventArgs e)
     // You will need to stitch the message together yourself. This example will generally work with short text messages.
     Console.WriteLine(string.Format("{0} - {1} - {2} - {3} - {4}", DateTime.UtcNow, "Sample Server", "Message Received", e.Host.ToString(), Encoding.UTF8.GetString(e.Data)));
     // We will now disconnect the client.
-    ms.DisconnectClient(e.Host);
+    //ms.DisconnectClient(e.Host); // Uncomment to disconnect the client
 }
 
 void Log(object sender, LogEventArgs e)
