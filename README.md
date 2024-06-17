@@ -8,6 +8,8 @@
 
 The Advanced Computing Services Messaging library allows Client/Server Communications. Each instance can either be a Server or a Client and supports TLS1.2 encryption.
 
+The Server now supports basic Access Control Rules with some further validation via a Challenge. Challenge needs to be less than 1KB - in most instances a GUID or something short will be used.
+
 
 ## History
 
@@ -24,7 +26,7 @@ Various updates were made, such as:
 
 TODO: Add documentation on library usage.
 
-Basic sample code below as well as a sample server and client project to get you started. The library has intellisense support and should provide a lot of details but is very simple to use.
+Basic sample code below, however, intellisense should provide details on usage. The sample projects also contain useful code for using some of the features.
 
 Server Init:
 ```c#
