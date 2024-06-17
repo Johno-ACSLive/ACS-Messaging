@@ -35,10 +35,10 @@ while (isrunning)
     switch (command)
     {
         case "EnableACL":
-            ms.IsAccessControlEnabled = true;
+            ms.SetIsAccessControlEnabled(true);
             break;
         case "DisableACL":
-            ms.IsAccessControlEnabled = false;
+            ms.SetIsAccessControlEnabled(false);
             break;
         case "EnableChallenge":
             ms.IsAccessControlChallengeEnabled = true;
@@ -47,10 +47,10 @@ while (isrunning)
             ms.IsAccessControlChallengeEnabled = false;
             break;
         case "SetACLModeWhitelist":
-            ms.AccessControlMode = MessageServer.AccessControlType.Whitelist;
+            ms.SetAccessControlMode(MessageServer.AccessControlType.Whitelist);
             break;
         case "SetACLModeBlacklist":
-            ms.AccessControlMode = MessageServer.AccessControlType.Blacklist;
+            ms.SetAccessControlMode(MessageServer.AccessControlType.Blacklist);
             break;
         case "AddACLRule":
             ms.AddAccessControlRule(new(IPAddress.Parse("127.0.0.1")) { IsEnabled = true, IsChallengeEnabled = false });

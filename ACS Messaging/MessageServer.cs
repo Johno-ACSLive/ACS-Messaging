@@ -147,7 +147,7 @@ namespace ACS.Messaging
         /// <value>
         /// An <b>AccessControlType</b> indicating which Access Control Mode to use.
         /// </value>
-        public AccessControlType AccessControlMode { get; set; } = AccessControlType.Whitelist;
+        public AccessControlType AccessControlMode { get; private set; } = AccessControlType.Whitelist;
 
         /// <summary>
         /// Gets or Sets the flag for enabling or disabling Access Control globally.
@@ -155,7 +155,7 @@ namespace ACS.Messaging
         /// <value>
         /// A <b>Boolean</b> indicating if Access Control is active or not.
         /// </value>
-        public bool IsAccessControlEnabled { get; set; } = false;
+        public bool IsAccessControlEnabled { get; private set; } = false;
 
         /// <summary>
         /// Gets or Sets the flag for enabling or disabling Access Control Rule Challenges globally.
@@ -163,7 +163,7 @@ namespace ACS.Messaging
         /// <value>
         /// A <b>Boolean</b> indicating if Access Control Challenges are active or not.
         /// </value>
-        public bool IsAccessControlChallengeEnabled { get; set; } = false;
+        public bool IsAccessControlChallengeEnabled { get; set; } = false; // As per note in ProcessAccessControlChallenge
         #endregion
 
         #region " Constructors "
@@ -571,6 +571,18 @@ namespace ACS.Messaging
             }
         }
 
+        public void SetAccessControlMode(AccessControlType AccessControlType)
+        {
+            AccessControlMode = AccessControlType;
+            ReprocessClientsAccessControl();
+        }
+
+        public void SetIsAccessControlEnabled(bool Enabled)
+        {
+            IsAccessControlEnabled = Enabled;
+            ReprocessClientsAccessControl();
+        }
+
         /// <summary>
         /// Add the specified Access Control Rule.
         /// </summary>
@@ -583,11 +595,7 @@ namespace ACS.Messaging
 
             if (IsAccessControlEnabled is true && AccessControlMode == AccessControlType.Blacklist)
             {
-                IEnumerable<TcpClient> tcpclients = clients.Select(c => new { client = c, host = c.Value }).Where(x => x.host.HostName == Rule.IPAddress.ToString()).Select(x => x.client.Key);
-                foreach (TcpClient client in tcpclients)
-                {
-                    ProcessAccessControl(client, true);
-                }
+                ReprocessClientAccessControl(Rule.IPAddress);
             }
         }
 
@@ -603,11 +611,7 @@ namespace ACS.Messaging
 
             if (IsAccessControlEnabled is true)
             {
-                IEnumerable<TcpClient> tcpclients = clients.Select(c => new { client = c, host = c.Value }).Where(x => x.host.HostName == Rule.IPAddress.ToString()).Select(x => x.client.Key);
-                foreach (TcpClient client in tcpclients)
-                {
-                    ProcessAccessControl(client, true);
-                }
+                ReprocessClientAccessControl(Rule.IPAddress);
             }
         }
 
@@ -623,11 +627,7 @@ namespace ACS.Messaging
 
             if (IsAccessControlEnabled is true && AccessControlMode == AccessControlType.Whitelist)
             {
-                IEnumerable<TcpClient> tcpclients = clients.Select(c => new { client = c, host = c.Value }).Where(x => x.host.HostName == Rule.IPAddress.ToString()).Select(x => x.client.Key);
-                foreach (TcpClient client in tcpclients)
-                {
-                    ProcessAccessControl(client, true);
-                }
+                ReprocessClientAccessControl(Rule.IPAddress);
             }
         }
 
@@ -785,6 +785,29 @@ namespace ACS.Messaging
         }
 
         /// <summary>
+        /// Re-Checks Access Control for all connected clients.
+        /// </summary>
+        public void ReprocessClientsAccessControl()
+        {
+            foreach (TcpClient client in clients.Keys)
+            {
+                ProcessAccessControl(client, true);
+            }
+        }
+
+        /// <summary>
+        /// Re-Checks Access Control for a single IP Address.
+        /// </summary>
+        public void ReprocessClientAccessControl(IPAddress IPAddress)
+        {
+            IEnumerable<TcpClient> tcpclients = clients.Select(c => new { client = c, host = c.Value }).Where(x => x.host.HostName == IPAddress.ToString()).Select(x => x.client.Key);
+            foreach (TcpClient client in tcpclients)
+            {
+                ProcessAccessControl(client, true);
+            }
+        }
+
+        /// <summary>
         /// Checks is Access Control is Enabled and processes the client as required.
         /// </summary>
         private bool ProcessAccessControl(TcpClient client, bool SkipChallenge = false)
@@ -857,6 +880,9 @@ namespace ACS.Messaging
         /// </summary>
         private bool ProcessAccessControlChallenge(TcpClient client, string challenge)
         {
+            // This is not ideal as we don't have good integration.
+            // We need to re-architect and have full integration via message framing.
+            // Raw connections will not support Challenge in future (application logic will need to handle an equivalent if required).
             bool isaccesscontrolpassed = false;
             ChallengeRequest request = new ChallengeRequest() { ID = Guid.NewGuid().ToString(), ChallengeType = ChallengeRequest.ChallengeRequestType.ChallengeRequested };
             MemoryStream ms = new MemoryStream();
