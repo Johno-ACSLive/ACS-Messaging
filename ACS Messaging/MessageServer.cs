@@ -571,12 +571,24 @@ namespace ACS.Messaging
             }
         }
 
+        /// <summary>
+        /// Sets the Access Control Mode and re-evaluates existing client connections.
+        /// </summary>
+        /// <param name="AccessControlType">
+        /// The Access Control Type Mode.
+        /// </param>
         public void SetAccessControlMode(AccessControlType AccessControlType)
         {
             AccessControlMode = AccessControlType;
             ReprocessClientsAccessControl();
         }
 
+        /// <summary>
+        /// Sets the flag for enabling or disabling Access Control globally and re-evaluates existing client connections.
+        /// </summary>
+        /// <param name="Enabled">
+        /// The flag for enabling or disabling.
+        /// </param>
         public void SetIsAccessControlEnabled(bool Enabled)
         {
             IsAccessControlEnabled = Enabled;
