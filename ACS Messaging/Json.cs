@@ -4,20 +4,20 @@ using System.Threading.Tasks;
 
 namespace ACS.Messaging
 {
-    public static class Json
+    internal static class Json
     {
-        public static async Task<object> DeserializeAsync(Stream Stream, object Object)
+        internal static async Task<object> DeserializeAsync(Stream Stream, object Object)
         {
             // Can't use generics so we need to set object type
             return await JsonSerializer.DeserializeAsync(Stream, Object.GetType());
         }
 
-        public static async Task SerializeAsync(Stream Stream, object value)
+        internal static async Task SerializeAsync(Stream Stream, object value)
         {
             await JsonSerializer.SerializeAsync(Stream, value);
         }
 
-        public static async Task<object> DeserializeAsync(string value)
+        internal static async Task<object> DeserializeAsync(string value)
         {
             return await Task.Run(() =>
             {
@@ -25,7 +25,7 @@ namespace ACS.Messaging
             });
         }
 
-        public static async Task<string> SerializeAsync(object value)
+        internal static async Task<string> SerializeAsync(object value)
         {
             return await Task.Run(() =>
             {
@@ -33,12 +33,12 @@ namespace ACS.Messaging
             });
         }
 
-        public static object Deserialize(string value)
+        internal static object Deserialize(string value)
         {
             return JsonSerializer.Deserialize<object>(value);
         }
 
-        public static string Serialize(object value)
+        internal static string Serialize(object value)
         {
             return JsonSerializer.Serialize(value);
         }
