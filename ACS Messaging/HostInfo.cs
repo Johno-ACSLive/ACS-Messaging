@@ -150,27 +150,27 @@ using System.Threading;
             return obj is HostInfo && Equals((HostInfo)obj);
         }
 
-        /// <summary>
-        /// Overridden. Returns the hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// <b>Int32</b> for a <see cref="HostInfo" /> as a hash.
-        /// </returns>
-        /// <remarks>
-        /// Returns the hash code for this instance.
-        /// </remarks>
-        public override int GetHashCode()
-        {
-            return GetHashCode();
-        }
+    /// <summary>
+    /// Overridden. Returns the hash code for this instance.
+    /// </summary>
+    /// <returns>
+    /// <b>Int32</b> for a <see cref="HostInfo" /> as a hash.
+    /// </returns>
+    /// <remarks>
+    /// Returns the hash code for this instance.
+    /// </remarks>
+    public override int GetHashCode()
+    {
+        return (_hostName, _port).GetHashCode();
+    }
 
-        /// <summary>
-        /// Overridden.  Returns a string representation of the <see cref="HostInfo" /> object.
-        /// </summary>
-        /// <returns>
-        /// A <b>String</b> containing the host name and port number, separated by a colon.
-        /// </returns>
-        public override string ToString()
+    /// <summary>
+    /// Overridden.  Returns a string representation of the <see cref="HostInfo" /> object.
+    /// </summary>
+    /// <returns>
+    /// A <b>String</b> containing the host name and port number, separated by a colon.
+    /// </returns>
+    public override string ToString()
         {
             return _hostName + ":" + _port;
         }
