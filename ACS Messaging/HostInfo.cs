@@ -94,6 +94,14 @@ using System.Threading;
         }
 
         /// <summary>
+        /// Gets or Sets the Challenge used for further validation.
+        /// </summary>
+        /// <value>
+        /// A <b>String</b> containing a challenge.
+        /// </value>
+        public string Challenge { get; set; }
+
+        /// <summary>
         /// Creates a new instance of the <see cref="HostInfo" /> class.
         /// </summary>
         /// <param name="hostName">

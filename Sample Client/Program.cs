@@ -52,6 +52,9 @@ while (isrunning)
         case "SetChallengeBob":
             challenge = "bob";
             break;
+        case "SetChallengeBob1":
+            challenge = "bob1";
+            break;
         case "Exit":
             isrunning = false;
             break;

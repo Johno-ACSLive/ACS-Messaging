@@ -65,7 +65,7 @@ namespace ACS.Messaging
         /// <value>
         /// A <b>String</b> containing challenge response to be validated.
         /// </value>
-        public string Challenge { get; set; }
+        public string Challenge { get => server.Challenge; set => server.Challenge = value; }
 
         /// <summary>
         /// Gets or Sets the flag for enabling or disabling the Challenge validation response.

@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 
 /// <summary>
 /// Contains a rule for Access Control.
@@ -17,12 +18,12 @@ public class AccessControlRule
     /// </value>
     public IPAddress IPAddress => ipaddress;
     /// <summary>
-    /// Gets or Sets a Challenge for further validation.
+    /// Challenges for further validation which can also be individually enabled or disabled.
     /// </summary>
     /// <value>
-    /// A <b>String</b> containing challenge response expected.
+    /// A <b>Dictionary<string, bool></b> containing challenges expected and if the challenge is enabled or disabled.
     /// </value>
-    public string Challenge { get; set; }
+    public Dictionary<string, bool> Challenges { get; private set; } = new Dictionary<string, bool>();
     /// <summary>
     /// Gets or Sets the flag for enabling or disabling this rule.
     /// </summary>

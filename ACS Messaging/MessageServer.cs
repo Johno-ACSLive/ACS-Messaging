@@ -736,8 +736,8 @@ namespace ACS.Messaging
         {
             SslStream securestream = default(SslStream);
             NetworkStream stream = default(NetworkStream);
-            bool isaccesscontrolpassed = ProcessAccessControl(client);
-            if (isaccesscontrolpassed is false) { return; }
+            AccessControlCheck check = ProcessAccessControl(client);
+            if (check.IsPassed is false) { return; }
 
             try
             {
@@ -754,7 +754,7 @@ namespace ACS.Messaging
                 if (Secure == false)
                 {
                     // Remember the client and its host information.
-                    AddClient(client);
+                    AddClient(client, check);
                     // Listen asynchronously for incoming messages from this client.
                     Read(buffer, client, stream);
                 }
@@ -764,7 +764,7 @@ namespace ACS.Messaging
                     securestream = new SslStream(client.GetStream(), false);
                     securestream.AuthenticateAsServer(servercertificate, false, SslProtocols.Tls12, true);
                     // Remember the client and its host information.
-                    AddClient(client, securestream);
+                    AddClient(client, check, securestream);
                     // Listen asynchronously for incoming messages from this client.
                     SecureRead(buffer, client, securestream);
                 }
@@ -822,80 +822,83 @@ namespace ACS.Messaging
         /// <summary>
         /// Checks is Access Control is Enabled and processes the client as required.
         /// </summary>
-        private bool ProcessAccessControl(TcpClient client, bool SkipChallenge = false)
+        private AccessControlCheck ProcessAccessControl(TcpClient client, bool SkipChallenge = false)
         {
-            bool isaccesscontrolpassed = false;
+            AccessControlCheck check = new AccessControlCheck();
 
             if (IsAccessControlEnabled is true)
             {
-                if (AccessControlMode == AccessControlType.Whitelist) { isaccesscontrolpassed = ProcessAccessControlWhitelist(client, SkipChallenge); }
-                if (AccessControlMode == AccessControlType.Blacklist) { isaccesscontrolpassed = ProcessAccessControlBlacklist(client, SkipChallenge); }
+                if (AccessControlMode == AccessControlType.Whitelist) { ProcessAccessControlWhitelist(client, SkipChallenge, check); }
+                if (AccessControlMode == AccessControlType.Blacklist) { ProcessAccessControlBlacklist(client, SkipChallenge, check); }
 
-                if (isaccesscontrolpassed is false)
+                if (check.IsPassed is false)
                 {
                     client.GetStream().Close();
                     client.Close();
-                    return isaccesscontrolpassed;
                 }
             }
+            else
+            {
+                check.IsPassed = true;
+            }
 
-            isaccesscontrolpassed = true;
-            return isaccesscontrolpassed;
+            return check;
         }
 
         /// <summary>
         /// Check access control for Whitelist Mode.
         /// </summary>
-        private bool ProcessAccessControlWhitelist(TcpClient client, bool SkipChallenge)
+        private void ProcessAccessControlWhitelist(TcpClient client, bool SkipChallenge, AccessControlCheck Check)
         {
-            bool isaccesscontrolpassed = false;
-            if (accesscontrollist.Count() == 0) { return isaccesscontrolpassed; }
+            if (accesscontrollist.Count() == 0) { return; }
             IPEndPoint ipendpoint = (IPEndPoint)client.Client.RemoteEndPoint;
             IPAddress ipaddress = ipendpoint.Address;
-            if (accesscontrollist.ContainsKey(ipaddress) is false) { return isaccesscontrolpassed; }
+            if (accesscontrollist.ContainsKey(ipaddress) is false) { return; }
             AccessControlRule rule = accesscontrollist[ipaddress];
-            if (rule.IsEnabled is false) { return isaccesscontrolpassed; }
+            if (rule.IsEnabled is false) { return; }
 
             if (rule.IsChallengeEnabled is true && IsAccessControlChallengeEnabled is true && SkipChallenge is false)
             {
-                if (ProcessAccessControlChallenge(client, rule.Challenge) is false) { return isaccesscontrolpassed; }
+                ProcessAccessControlChallenge(client, rule.Challenges, Check);
             }
-
-            isaccesscontrolpassed = true;
-            return isaccesscontrolpassed;
+            else
+            {
+                Check.IsPassed = true;
+            }
         }
 
         /// <summary>
         /// Check access control for Blacklist Mode.
         /// </summary>
-        private bool ProcessAccessControlBlacklist(TcpClient client, bool SkipChallenge)
+        private void ProcessAccessControlBlacklist(TcpClient client, bool SkipChallenge, AccessControlCheck Check)
         {
-            bool isaccesscontrolpassed = true;
-            if (accesscontrollist.Count() == 0) { return isaccesscontrolpassed; }
+            Check.IsPassed = true;
+            if (accesscontrollist.Count() == 0) { return; }
             IPEndPoint ipendpoint = (IPEndPoint)client.Client.RemoteEndPoint;
             IPAddress ipaddress = ipendpoint.Address;
-            if (accesscontrollist.ContainsKey(ipaddress) is false) { return isaccesscontrolpassed; }
+            if (accesscontrollist.ContainsKey(ipaddress) is false) { return; }
             AccessControlRule rule = accesscontrollist[ipaddress];
-            if (rule.IsEnabled is false) { return isaccesscontrolpassed; }
+            if (rule.IsEnabled is false) { return; }
 
             if (rule.IsChallengeEnabled is true && IsAccessControlChallengeEnabled is true && SkipChallenge is false)
             {
-                if (ProcessAccessControlChallenge(client, rule.Challenge) is true) { return isaccesscontrolpassed; }
+                ProcessAccessControlChallenge(client, rule.Challenges, Check);
             }
-
-            isaccesscontrolpassed = false;
-            return isaccesscontrolpassed;
+            else
+            {
+                Check.IsPassed = false;
+            }
         }
 
         /// <summary>
         /// Check access control challenge.
         /// </summary>
-        private bool ProcessAccessControlChallenge(TcpClient client, string challenge)
+        private void ProcessAccessControlChallenge(TcpClient client, Dictionary<string, bool> challenges, AccessControlCheck Check)
         {
             // This is not ideal as we don't have good integration.
             // We need to re-architect and have full integration via message framing.
             // Raw connections will not support Challenge in future (application logic will need to handle an equivalent if required).
-            bool isaccesscontrolpassed = false;
+            Check.IsPassed = false;
             ChallengeRequest request = new ChallengeRequest() { ID = Guid.NewGuid().ToString(), ChallengeType = ChallengeRequest.ChallengeRequestType.ChallengeRequested };
             MemoryStream ms = new MemoryStream();
             ushort size;
@@ -940,13 +943,17 @@ namespace ACS.Messaging
 
                 // Restore the timeout value
                 client.ReceiveTimeout = receivetimeout;
-                if (bytecount == 0) { return isaccesscontrolpassed; }
+                if (bytecount == 0) { return; }
                 size = BitConverter.ToUInt16(readbuffer, 0);
-                if (bytecount != size) { return isaccesscontrolpassed; }
+                if (bytecount != size) { return; }
                 ms = new MemoryStream(readbuffer, 2, size - 2);
                 // Because we can't use generics - lazyily generating new object
                 response = (ChallengeResponse)Json.DeserializeAsync(ms, new ChallengeResponse()).Result;
-                if (response.ID.Equals(request.ID) is false || challenge.Equals(response.Challenge) is false) { return isaccesscontrolpassed; }
+                if (response.ID.Equals(request.ID) is false) { return; }
+                if (challenges.ContainsKey(response.Challenge) is false) { return; }
+                if (challenges[response.Challenge] is false) { return; }
+                Check.Challenge = response.Challenge;
+                Check.IsChallenge = true;
             }
             catch (IOException IOe)
             {
@@ -956,12 +963,12 @@ namespace ACS.Messaging
                     if (se.SocketErrorCode != SocketError.TimedOut) { OnLog(new LogEventArgs(DateTime.Now, "ERROR", se.Message)); }
                 }
 
-                return isaccesscontrolpassed;
+                return;
             }
             catch (Exception Ex)
             {
                 OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.Message));
-                return isaccesscontrolpassed;
+                return;
             }
 
             try
@@ -991,8 +998,7 @@ namespace ACS.Messaging
                 OnLog(new LogEventArgs(DateTime.Now, "ERROR", Ex.Message));
             }
 
-            isaccesscontrolpassed = true;
-            return isaccesscontrolpassed;
+            Check.IsPassed = true;
         }
 
         /// <summary>
@@ -1217,7 +1223,7 @@ namespace ACS.Messaging
         /// <param name="securestream">
         /// Optional Secure Stream object.
         /// </param>
-        private void AddClient(TcpClient client, SslStream securestream = null)
+        private void AddClient(TcpClient client, AccessControlCheck Check, SslStream securestream = null)
         {
             HostInfo host = default(HostInfo);
 
@@ -1230,6 +1236,7 @@ namespace ACS.Messaging
                         // Create a new host record
                         IPEndPoint HostAddress = (IPEndPoint)client.Client.RemoteEndPoint;
                         host = new HostInfo(HostAddress.Address.ToString(), HostAddress.Port, Secure, securestream);
+                        if (Check.IsChallenge is true) { host.Challenge = Check.Challenge; }
                         // Remember the client and its host information.
                         clients.Add(client, host);
                         // Notify any listeners that a connection has been made.

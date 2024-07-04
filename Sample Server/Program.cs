@@ -59,10 +59,13 @@ while (isrunning)
             ms.RemoveAccessControlRule(new(IPAddress.Parse("127.0.0.1")) { IsEnabled = true, IsChallengeEnabled = false });
             break;
         case "AddACLRuleWithChallenge":
-            ms.AddAccessControlRule(new(IPAddress.Parse("127.0.0.1")) { IsEnabled = true, IsChallengeEnabled = true, Challenge = "bob" });
+            AccessControlRule rule = new(IPAddress.Parse("127.0.0.1")) { IsEnabled = true, IsChallengeEnabled = true };
+            rule.Challenges.Add("bob", false);
+            rule.Challenges.Add("bob1", true);
+            ms.AddAccessControlRule(rule);
             break;
         case "RemoveACLRuleWithChallenge":
-            ms.RemoveAccessControlRule(new(IPAddress.Parse("127.0.0.1")) { IsEnabled = true, IsChallengeEnabled = true, Challenge = "bob" });
+            ms.RemoveAccessControlRule(new(IPAddress.Parse("127.0.0.1")) { IsEnabled = true, IsChallengeEnabled = true });
             break;
         case "Exit":
             isrunning = false;
