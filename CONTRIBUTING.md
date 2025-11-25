@@ -50,4 +50,4 @@ That doesn't mean the library is done, still a lot of work to do and I have the 
 
 ## License
 
-Licensed under Apache License, Version 2.0, any contribution submitted by you for inclusion in the project will be license the same and without any additional terms or conditions.
+Licensed under Apache License, Version 2.0, any contribution submitted by you for inclusion in the project will be licensed the same and without any additional terms or conditions.
