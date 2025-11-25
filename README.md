@@ -11,6 +11,31 @@ The Advanced Computing Services Messaging library allows Client/Server Communica
 The Server now supports basic Access Control Rules with some further validation via a Challenge. Challenge needs to be less than 1KB - in most instances a GUID or something short will be used.
 
 
+## Version Support
+
+This project follows [Semantic Versioning](https://semver.org/) (SemVer).
+
+### Current Support Status
+
+- **Supported**: Latest release only - full bug fixes and security patches
+- **End of Life**: All previous releases - no fixes or support
+
+For small projects like ACS Messaging, we focus resources on the current release. Users are encouraged to upgrade to the latest version to receive security updates and bug fixes.
+
+### Release Types
+
+- **Major (X.0.0)**: Breaking changes - review changes before upgrading
+- **Minor (0.X.0)**: New features, Bug fixes and Security updates, backwards compatible
+- **Patch (0.0.X)**: Small changes, backwards compatible
+
+Releases will indicate which security issues are addressed.
+
+
+## Migration Guide
+
+None available at this time since there has not been a major release yet.
+
+
 ## History
 
 In 2010 I found a library written by [jmcilhinney](http://www.vbforums.com/member.php?58941-jmcilhinney) who released a project [here](http://www.vbforums.com/showthread.php?587341-VB2008-NET-3-5-Asynchronous-TcpListener-amp-TcpClient). It was a great library to learn async networking in VB.NET. My immediate need was binary data, not text.
@@ -58,7 +83,9 @@ MC.Connect();
 
 ## Contribute
 
-If you're interested, check how to [Contribute](CONTRIBUTING.md)!
+For bug reports, feature requests, discussions, support and contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+**Security Vulnerabilities**: Please report security issues privately via [Contact Us](https://www.acslive.com.au/contact/) rather than public issues.
 
 
 ## License
