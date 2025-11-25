@@ -9,7 +9,7 @@
     <Authors>Advanced Computing Services</Authors>
     <Copyright>Copyright © 2008-2022</Copyright>
     <Product>ACS Messaging</Product>
-    <Version>2.0.4</Version>
+    <Version>2.0.0</Version>
     <PackageProjectUrl>https://www.acslive.com.au</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Johno-ACSLive/ACS-Messaging</RepositoryUrl>
@@ -30,7 +30,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0" />
   </ItemGroup>
 
 </Project>

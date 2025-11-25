@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Sample Client</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -10,7 +10,7 @@
     <Authors>Advanced Computing Services</Authors>
     <Copyright>Copyright © 2008-2022</Copyright>
     <Product>ACS Messaging</Product>
-    <Version>2.0.4</Version>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
